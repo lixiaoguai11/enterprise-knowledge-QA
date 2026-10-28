@@ -49,6 +49,7 @@ cd backend
 - 评估结果、场景和限制：[docs/03-evaluation.md](docs/03-evaluation.md)
 - 复盘与后续工作：[docs/05-retrospective.md](docs/05-retrospective.md)
 - 三组验收输入、输出和 Trace：[examples/](examples/)
+- 真实模型请求超时记录：[examples/04-live-deepseek-timeout.json](examples/04-live-deepseek-timeout.json)
 - 合成冲突资料：[data/clean/synthetic/](data/clean/synthetic/)
 
 运行测试：

@@ -1,0 +1,27 @@
+{
+  "run_mode": "真实 CLI 交互；已尝试调用 .env 配置的 DeepSeek；API Key 未记录；可选检索模型在本次运行中未启用，使用 BM25 回退配置",
+  "generated_at": "2026-10-29",
+  "model_name": "未从本次运行记录中确认",
+  "input": "报销期限多久？",
+  "history": [],
+  "startup": {
+    "cli_prompt_reached": true,
+    "optional_vector_and_reranker": "未加载，本次使用 HF_HUB_OFFLINE=1 避免下载；未从缓存找到模型"
+  },
+  "output": {
+    "answer": "模型调用失败：Request timed out.",
+    "citations": [],
+    "gaps": [],
+    "status": "tool_error",
+    "trace": [
+      {
+        "action": "model_error",
+        "error": "Request timed out."
+      }
+    ],
+    "tools_used": [],
+    "rounds": 1
+  },
+  "cli_output": "答案：模型调用失败：Request timed out.\n状态：tool_error\n引用：无\n资料缺口：无\n工具 Trace：model_error (Request timed out.)",
+  "interpretation": "CLI 能启动并进入提问提示符，但模型请求超时，Agent 未收到工具调用或模型答案；因此本条不验证 DeepSeek 冲突处理、知识检索结果或 API Key 有效性。"
+}
