@@ -9,19 +9,20 @@
 - CLI 启动会尝试加载向量检索和重排模型；首次下载需要联网，加载异常时尝试降级到 BM25，但下载等待可能拖慢首次启动
 - 不需要 Node.js、Docker、GPU 或 Web 服务
 
-## 安装和配置
+## 快速使用（Windows PowerShell）
 
-项目使用 [uv](https://docs.astral.sh/uv/) 创建虚拟环境并安装 `requirements.txt` 中固定版本的直接依赖。先安装 uv，然后在仓库根目录运行：
+先在仓库根目录创建环境、安装依赖并准备配置文件。若 `.env` 已存在，下面的命令不会覆盖它：
 
 ```powershell
 uv venv --python 3.12
 uv pip install --python .venv\Scripts\python.exe -r backend\requirements.txt
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+notepad .env
 ```
 
-在 `.env` 中填写 `DEEPSEEK_API_KEY`。可选配置 `DEEPSEEK_BASE_URL` 和 `MODEL_NAME`。密钥只在本机 `.env` 中配置，不要提交。
+`.env` 位于仓库根目录。在记事本中填写 `DEEPSEEK_API_KEY`；可选配置 `DEEPSEEK_BASE_URL` 和 `MODEL_NAME`。密钥只保存在本机 `.env` 中，不要提交，也不要发到聊天里。
 
-## 运行 REPL
+启动交互式 CLI：
 
 ```powershell
 cd backend
@@ -33,6 +34,8 @@ cd backend
 - `/help`：查看可用命令
 - `/new`：清空当前对话上下文
 - `/exit`：退出
+
+输入自然语言问题即可开始问答。每轮输出回答、引用原文及文档版本、资料缺口、任务状态和本轮工具 Trace。
 
 从首次接手仓库的角度阅读：[docs/00-start-here.md](docs/00-start-here.md)。它给出目录地图、代码走读顺序和常见排查方法。
 
