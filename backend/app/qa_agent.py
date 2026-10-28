@@ -39,7 +39,7 @@ class AgentResult:
 
 def call_model(messages: list[dict[str, Any]], tools: list[dict]) -> Any:
     if not DEEPSEEK_API_KEY:
-        raise RuntimeError("未配置 DEEPSEEK_API_KEY，请复制 backend/.env.example 为 backend/.env 并填写")
+        raise RuntimeError("未配置 DEEPSEEK_API_KEY，请复制仓库根目录的 .env.example 为 .env 并填写")
     from openai import OpenAI
 
     client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_BASE_URL)

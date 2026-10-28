@@ -6,7 +6,7 @@
 
 - Python 3.12 或更新版本
 - DeepSeek API Key（真实模型问答需要）
-- 首次启用向量检索/重排时需要联网下载模型；无法加载时检索会降级到 BM25
+- CLI 启动会尝试加载向量检索和重排模型；首次下载需要联网，加载异常时尝试降级到 BM25，但下载等待可能拖慢首次启动
 - 不需要 Node.js、Docker、GPU 或 Web 服务
 
 ## 安装和配置
@@ -28,17 +28,20 @@ cd backend
 ..\.venv\Scripts\python.exe -m app.cli
 ```
 
-第一次启动会将 `data/clean` 中的 Markdown 文档导入本地 SQLite，并建立 BM25 索引；可用时还会启用向量检索和 BGE 重排。提问后可继续追问以使用上下文。
+数据库为空时，启动会将 `data/clean` 中的 Markdown 文档导入本地 SQLite，并建立 BM25 索引；可用时还会启用向量检索和 BGE 重排。若数据库已有文档，启动不会自动重新导入资料。提问后可继续追问以使用当前进程内的对话上下文。
 
 - `/help`：查看可用命令
 - `/new`：清空当前对话上下文
 - `/exit`：退出
+
+从首次接手仓库的角度阅读：[docs/00-start-here.md](docs/00-start-here.md)。它给出目录地图、代码走读顺序和常见排查方法。
 
 每轮显示答案、状态、引用（文档 ID、版本日期、原句）、资料缺口和工具 Trace。状态包括 `answered`、`needs_clarification`、`insufficient_evidence`、`tool_error` 和达到调用上限时的 `incomplete`。
 
 ## 评审入口
 
 - 需求与成功标准：[docs/01-requirements.md](docs/01-requirements.md)
+- 新手导览与排查：[docs/00-start-here.md](docs/00-start-here.md)
 - Agent 流程与设计取舍：[docs/02-solution.md](docs/02-solution.md)
 - 评估结果、场景和限制：[docs/03-evaluation.md](docs/03-evaluation.md)
 - 复盘与后续工作：[docs/05-retrospective.md](docs/05-retrospective.md)
@@ -61,7 +64,14 @@ cd backend
 
 ## 资料格式和重建索引
 
-向 `data/clean/` 放入 Markdown 文件，并在 `data/meta/manifest.csv` 增加文档编号、相对路径、类别、来源和更新日期。文档正文、标题及元数据评论会被导入；检索片段保留文档 ID 和版本日期。需要重建时，删除 `backend/knowledge.db` 后重新启动即可。
+向 `data/clean/` 放入 Markdown 文件，并在 `data/meta/manifest.csv` 增加文档编号、相对路径、类别、来源和更新日期。文档正文、标题及元数据评论会被导入；检索片段保留文档 ID 和版本日期。当前没有增量导入命令。新增或修改资料后，要先退出程序，再删除 `backend/knowledge.db` 和 `backend/data/embeddings/`，然后重启以重建数据库与向量缓存：
+
+```powershell
+Remove-Item backend\knowledge.db -ErrorAction SilentlyContinue
+Remove-Item backend\data\embeddings -Recurse -Force -ErrorAction SilentlyContinue
+```
+
+只改磁盘 Markdown 而不重建 SQLite 时，`read_document` 读取的仍是数据库里原先导入的切片。只按 chunk ID 判断向量缓存是否匹配，因此原文变化时也应清理向量缓存。
 
 内置 D01 与 D02 是用于验收的合成资料：两者分别写明报销期限为 30 天和 15 天，且均未提供适用范围或优先级。它们不是现实制度建议。
 
