@@ -1,0 +1,108 @@
+{
+  "run_mode": "脚本化模型和知识工具响应；真实 QA Agent 编排代码；不代表 DeepSeek 实际推理或检索质量",
+  "generated_at": "2026-10-28",
+  "scenarios": [
+    {
+      "input": "火星天气如何？",
+      "history": [],
+      "output": {
+        "answer": "现有知识库没有相关资料，无法可靠回答。",
+        "citations": [],
+        "gaps": [
+          "缺少火星天气资料"
+        ],
+        "status": "insufficient_evidence",
+        "trace": [
+          {
+            "action": "search_documents",
+            "arguments": {
+              "query": "火星天气"
+            },
+            "result_count": 0
+          }
+        ],
+        "tools_used": [
+          "search_documents"
+        ],
+        "rounds": 2
+      },
+      "cli_output": "\n答案：现有知识库没有相关资料，无法可靠回答。\n状态：insufficient_evidence\n引用：\n  - 无\n资料缺口：\n  - 缺少火星天气资料\n工具 Trace：\n  - {\"action\": \"search_documents\", \"arguments\": {\"query\": \"火星天气\"}, \"result_count\": 0}\n"
+    },
+    {
+      "input": "报销期限多久？",
+      "history": [],
+      "output": {
+        "answer": "知识库工具 search_documents 执行失败；本轮停止，未根据不完整资料作答。",
+        "citations": [],
+        "gaps": [],
+        "status": "tool_error",
+        "trace": [
+          {
+            "action": "search_documents",
+            "error": "index unavailable"
+          }
+        ],
+        "tools_used": [
+          "search_documents"
+        ],
+        "rounds": 1
+      },
+      "cli_output": "\n答案：知识库工具 search_documents 执行失败；本轮停止，未根据不完整资料作答。\n状态：tool_error\n引用：\n  - 无\n资料缺口：\n  - 无\n工具 Trace：\n  - {\"action\": \"search_documents\", \"error\": \"index unavailable\"}\n"
+    }
+  ],
+  "mutation_check": {
+    "file": "data/clean/synthetic/D01-报销制度.md",
+    "before": {
+      "answer": "依据 D01，报销期限为 30 天。",
+      "citations": [
+        {
+          "doc_id": "D01",
+          "title": "报销制度 D01",
+          "version_date": "2026-01-10",
+          "quote": "员工应在费用发生后 30 天内提交报销申请。"
+        }
+      ],
+      "gaps": [],
+      "status": "answered",
+      "trace": [
+        {
+          "action": "search_documents",
+          "arguments": {
+            "query": "报销期限"
+          },
+          "result_count": 1
+        }
+      ],
+      "tools_used": [
+        "search_documents"
+      ],
+      "rounds": 2
+    },
+    "after_replacing_30_with_20_days": {
+      "answer": "依据 D01，报销期限为 20 天。",
+      "citations": [
+        {
+          "doc_id": "D01",
+          "title": "报销制度 D01",
+          "version_date": "2026-01-10",
+          "quote": "员工应在费用发生后 20 天内提交报销申请。"
+        }
+      ],
+      "gaps": [],
+      "status": "answered",
+      "trace": [
+        {
+          "action": "search_documents",
+          "arguments": {
+            "query": "报销期限"
+          },
+          "result_count": 1
+        }
+      ],
+      "tools_used": [
+        "search_documents"
+      ],
+      "rounds": 2
+    }
+  }
+}

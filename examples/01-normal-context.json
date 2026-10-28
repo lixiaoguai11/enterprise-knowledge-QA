@@ -1,0 +1,108 @@
+{
+  "run_mode": "脚本化模型和知识工具响应；真实 QA Agent 编排代码；不代表 DeepSeek 实际推理或检索质量",
+  "generated_at": "2026-10-28",
+  "scenarios": [
+    {
+      "input": "报销时要上传什么？",
+      "history": [],
+      "output": {
+        "answer": "提交报销时上传发票及付款凭证。",
+        "citations": [
+          {
+            "doc_id": "D03",
+            "title": "报销流程 FAQ",
+            "version_date": "2026-03-01",
+            "quote": "员工在费用系统创建报销单，并上传发票及付款凭证。"
+          }
+        ],
+        "gaps": [],
+        "status": "answered",
+        "trace": [
+          {
+            "action": "search_documents",
+            "arguments": {
+              "query": "报销要上传什么"
+            },
+            "result_count": 1
+          }
+        ],
+        "tools_used": [
+          "search_documents"
+        ],
+        "rounds": 2
+      },
+      "cli_output": "\n答案：提交报销时上传发票及付款凭证。\n状态：answered\n引用：\n  - D03 | 报销流程 FAQ | 版本 2026-03-01\n    原文：员工在费用系统创建报销单，并上传发票及付款凭证。\n资料缺口：\n  - 无\n工具 Trace：\n  - {\"action\": \"search_documents\", \"arguments\": {\"query\": \"报销要上传什么\"}, \"result_count\": 1}\n"
+    },
+    {
+      "input": "断网了，票据之后怎么交？",
+      "history": [],
+      "output": {
+        "answer": "网络恢复后在线提交。",
+        "citations": [
+          {
+            "doc_id": "D03",
+            "title": "报销流程 FAQ",
+            "version_date": "2026-03-01",
+            "quote": "网络恢复后在线提交。"
+          }
+        ],
+        "gaps": [],
+        "status": "answered",
+        "trace": [
+          {
+            "action": "search_documents",
+            "arguments": {
+              "query": "没有网络时如何补交报销票据"
+            },
+            "result_count": 1
+          }
+        ],
+        "tools_used": [
+          "search_documents"
+        ],
+        "rounds": 2
+      },
+      "cli_output": "\n答案：网络恢复后在线提交。\n状态：answered\n引用：\n  - D03 | 报销流程 FAQ | 版本 2026-03-01\n    原文：网络恢复后在线提交。\n资料缺口：\n  - 无\n工具 Trace：\n  - {\"action\": \"search_documents\", \"arguments\": {\"query\": \"没有网络时如何补交报销票据\"}, \"result_count\": 1}\n"
+    },
+    {
+      "input": "提交前还要核对什么？",
+      "history": [
+        {
+          "role": "user",
+          "content": "报销怎么提交？"
+        },
+        {
+          "role": "assistant",
+          "content": "填写报销单并上传票据。"
+        }
+      ],
+      "output": {
+        "answer": "提交前核对部门和成本中心。",
+        "citations": [
+          {
+            "doc_id": "D03",
+            "title": "报销流程 FAQ",
+            "version_date": "2026-03-01",
+            "quote": "提交前核对部门和成本中心。"
+          }
+        ],
+        "gaps": [],
+        "status": "answered",
+        "trace": [
+          {
+            "action": "search_documents",
+            "arguments": {
+              "query": "报销提交前核对什么"
+            },
+            "result_count": 1
+          }
+        ],
+        "tools_used": [
+          "search_documents"
+        ],
+        "rounds": 2
+      },
+      "cli_output": "\n答案：提交前核对部门和成本中心。\n状态：answered\n引用：\n  - D03 | 报销流程 FAQ | 版本 2026-03-01\n    原文：提交前核对部门和成本中心。\n资料缺口：\n  - 无\n工具 Trace：\n  - {\"action\": \"search_documents\", \"arguments\": {\"query\": \"报销提交前核对什么\"}, \"result_count\": 1}\n"
+    }
+  ]
+}
