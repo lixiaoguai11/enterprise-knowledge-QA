@@ -20,7 +20,7 @@ Anthropic 协议、远端 Embedding 和 Qwen rerank 均有真实调用记录。�
 | 真实冲突 Agent 路径 | 2026-10-30 Anthropic-compatible `deepseek-flash` 在真实 Embedding + Qwen rerank 检索后，选择补充搜索并读取 D01/D02 等原文；Conflict Guard 识别 30/15 天冲突，结果为 `needs_clarification`，两份引用齐全，见 [08-live-qwen-reranker.json](../examples/08-live-qwen-reranker.json) | 这条在线路径通过冲突和引用断言，Trace 包含实际工具参数、结果摘要、后续模型动作与简短可观察依据 | 只证明一次运行；不代表真实模型长期稳定或能处理所有冲突类型 |
 | 真实模型补查/读取路径 | 2026-10-30 另一次真实模型运行对产品问题先搜索、再改写 query 搜索并读取多份原文，最终模型输出无法解析为 JSON；Agent 明确返回 `tool_error`，记录见 [09-live-product-question.json](../examples/09-live-product-question.json) | 证明真实模型会根据前次检索结果继续改变工具动作；格式错误被安全处理并保留决策 Trace | 此路径没有得到有效答案，不能记作明确问题验收通过；模型的结构化输出稳定性是当前限制 |
 | 代码风格统一检查 | 当前仅运行 `git diff --check` 检查空白错误；没有配置 Ruff、Black、isort 或 flake8 | `py_compile` 成功；`git diff --check` 未报格式错误 | 语法/空白检查不等于统一的 Python 风格 lint 或自动格式化 |
-| GitHub 发布记录 | 此前一次推送返回 HTTP 403；2026-10-30 的远端检查因 DNS 解析失败未完成 | 本地运行记录与仓库文件可供审查 | 发布前需重新核对远端 `main` 与本地提交；该记录不表示最新文档已推送 |
+| GitHub 发布记录 | 2026-10-30 核对远端 `main` 后完成快进推送，并再次读取远端 SHA | 仓库中的代码、文档和 Trace 已有公开评审入口 | 本次新增文档以最终交付 SHA 为准；发布状态不代表上述未覆盖验收已通过 |
 
 两条在线 Agent 路径可对照阅读：[冲突澄清](../examples/08-live-qwen-reranker.json)在检索 D01/D02 后继续读原文，最终返回 `needs_clarification`；[产品问题](../examples/09-live-product-question.json)触发改写搜索与原文读取，最终因 JSON 无效返回 `tool_error`。较早的 [Anthropic 成功记录](../examples/05-live-anthropic-success.json)可用于复核协议适配。Trace 只记录可观察动作与结果摘要。
 
@@ -101,8 +101,8 @@ Anthropic 协议、远端 Embedding 和 Qwen rerank 均有真实调用记录。�
 - **读取的是已导入切片**：更新磁盘 Markdown 后，数据库和 BM25/向量索引都需要重建，否则读原文可能还是旧内容。
 - **权限边界缺失**：当前所有数据对本地运行者可查；真实企业接入前必须补文档 ACL、用户身份、密钥治理、审计和留存策略。
 - **对话历史仅内存**：进程重启即丢失；当前不支持用户隔离、恢复和历史删除流程。
-- **数据覆盖并非统一政策**：真实企业文件和合成演示资料同时在 `data/clean/` 中；这方便复用数据管道，但正式部署前必须确认每份文件来源、授权和适用对象。
+- **资料类型与适用范围**：`data/clean/` 同时包含虚构企业资料、验收合成资料和公开技术文档；来源与加工过程见[数据来源说明](07-data-provenance.md)。接入真实企业资料前仍需确认授权、适用对象与文档权限。
 
 ## 本次评估结论
 
-本次记录包括 16 项通过的 pytest 测试、6 个离线编排场景、真实 Qwen rerank 与冲突澄清成功路径，以及一条模型最终 JSON 无效的真实失败路径。成功的真实单证据回答、资料替换后的端到端检索和固定集排序指标仍待补齐；代码风格目前只做了语法与空白检查，尚无统一 lint/format 配置。此前 GitHub 推送和远端状态核对未完成，最新发布状态须在交付时重新检查。本轮考核规则核对、决策 Trace 和文档补齐按实际工作记录为 3 小时；该数字不代表项目累计开发工时。
+本次记录包括 16 项通过的 pytest 测试、6 个离线编排场景、真实 Qwen rerank 与冲突澄清成功路径，以及一条模型最终 JSON 无效的真实失败路径。成功的真实单证据回答、资料替换后的端到端检索和固定集排序指标仍待补齐；代码风格目前只做了语法与空白检查，尚无统一 lint/format 配置。GitHub `main` 已在远端校验后完成快进推送，最终提交以交付 SHA 为准。本轮考核规则核对、决策 Trace 和文档补齐按实际工作记录为 3 小时；该数字不代表项目累计开发工时。

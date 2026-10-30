@@ -117,6 +117,7 @@ Harness 让模型选择动作，由程序控制执行边界和输出契约。离
 - 实际测试、在线运行与已知限制：[03-evaluation.md](03-evaluation.md)
 - 从 0 到 1 的决策与复盘：[05-retrospective.md](05-retrospective.md)
 - CodeGraph 辅助生成的架构图：[06-architecture.md](06-architecture.md)
+- 作者确定的数据构成与来源登记：[07-data-provenance.md](07-data-provenance.md)
 - 可复核输入、输出和 Trace：[examples/](../examples/)
 
 截至 2026-10-30，本轮考核要求核对、决策 Trace 与文档补齐用时记录为 3 小时；该记录不代表项目累计开发时长。项目累计时长没有从第一天开始连续记录，不能由本轮工时或 Git 提交间隔推算。

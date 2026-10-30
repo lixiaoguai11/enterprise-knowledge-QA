@@ -66,6 +66,7 @@ cd backend
 - 需求与成功标准：[docs/01-requirements.md](docs/01-requirements.md)
 - 新手导览与排查：[docs/00-start-here.md](docs/00-start-here.md)
 - 项目架构图与模块边界：[docs/06-architecture.md](docs/06-architecture.md)
+- 数据来源、清洗和入库：[docs/07-data-provenance.md](docs/07-data-provenance.md)
 - Agent 流程与设计取舍：[docs/02-solution.md](docs/02-solution.md)
 - 评估结果、场景和限制：[docs/03-evaluation.md](docs/03-evaluation.md)
 - AI 使用范围与作者贡献：[docs/04-ai-usage.md](docs/04-ai-usage.md)
@@ -97,6 +98,8 @@ cd backend
 在线验证与 pytest 分开运行。API 不可达、模型输出无法解析或路径断言失败时，脚本以非零状态退出并保留 Trace。`decision_basis` 根据工具结果和模型所选动作生成，只描述可观察的依据。成功与失败记录均见[评估文档](docs/03-evaluation.md)。
 
 ## 资料格式和重建索引
+
+资料从哪里来、公开文档的版本记录及本地数据库如何生成，见[数据来源、加工与入库](docs/07-data-provenance.md)。
 
 向 `data/clean/` 放入 Markdown 文件，并在 `data/meta/manifest.csv` 增加文档编号、相对路径、类别、来源和更新日期。文档正文、标题及元数据评论会被导入；检索片段保留文档 ID 和版本日期。当前没有增量导入命令。新增或修改资料后，要先退出程序，再删除 `backend/knowledge.db` 和 `backend/data/embeddings/`，然后重启以重建数据库与向量缓存：
 

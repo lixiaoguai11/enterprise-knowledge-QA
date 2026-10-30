@@ -58,6 +58,7 @@ cd backend
 | `backend/app/ingest.py` | 从 manifest 加载 Markdown、清理元数据、切片并写入 SQLite |
 | `data/clean/` | 可供检索的资料；`data/clean/synthetic/` 保存验收用合成制度 |
 | `data/meta/manifest.csv` | 每份资料的 ID、路径、类别、来源和更新日期清单 |
+| `docs/07-data-provenance.md` | 资料来源、清洗过程、元数据含义及 SQLite 入库路径 |
 | `tests/` | pytest 自动化用例；使用脚本化模型和注入工具，不调用在线模型 |
 | `examples/` | 保存可读的运行输入、输出、工具 Trace 和测试运行模式说明 |
 | `docs/` | 需求、流程、评估、决策与复盘文档 |
@@ -76,6 +77,7 @@ cd backend
 - [01 — 需求与成功标准](01-requirements.md)：为什么做、做什么、如何判断完成。
 - [02 — 方案与调用流程](02-solution.md)：从提问到输出的实际代码路径、检索决策与取舍。
 - [06 — 项目架构图](06-architecture.md)：运行时组件、启动建库和 ReAct 工具循环图。
+- [07 — 数据来源与入库](07-data-provenance.md)：公开资料与合成资料的取得、清洗、登记和复核。
 - [03 — 评估结果](03-evaluation.md)：测试证据、Trace、未覆盖范围和当前阻塞。
 - [04 — AI 使用与作者贡献](04-ai-usage.md)：作者的业务、技术和验证决策，以及 AI 的代码与文字编辑工作。
 - [05 — 复盘与下一步](05-retrospective.md)：开发者从 0 到 1 的决策记录、教训和优先事项。

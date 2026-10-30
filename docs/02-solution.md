@@ -39,6 +39,8 @@ CLI 在 `backend/app/cli.py` 的 `initialize()` 中先调用 `init_db()`。随�
 
 导入流程位于 `backend/app/ingest.py`：读取 manifest 的 `文件名` 字段，将路径解析到 `data/clean/`；从 Markdown 文件和元数据注释读取 ID、标题、类别、来源、更新日期；去掉 front matter/HTML 注释；按标题和段落分段；普通片段最大约 800 字符；保存到 SQLite 的 `documents` 与 `chunks` 表。模型引用的是切片，因此 quote 不一定包含原文件整页文本。
 
+资料的生成、公开来源和清洗记录见[数据来源、加工与入库](07-data-provenance.md)。
+
 ### 数据库与缓存状态
 
 - SQLite 默认位置是 `backend/knowledge.db`。它一旦有任意文档，CLI 不会自动检查 manifest 后再导入新文件。
