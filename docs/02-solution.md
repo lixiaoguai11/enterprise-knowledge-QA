@@ -1,6 +1,6 @@
 # 02 — 方案、调用流程与关键决策
 
-本文按程序真实执行顺序说明一次问题从终端到答案的路径。代码位置以仓库当前版本为准；行号随修改可能变化，主要用于快速定位。
+本文沿实际执行路径说明 CLI 初始化、模型工具循环、检索排序、证据校验和终端输出。代码链接用于直接定位实现。
 
 ## 总体结构
 
@@ -39,13 +39,13 @@ CLI 在 `backend/app/cli.py` 的 `initialize()` 中先调用 `init_db()`。随�
 
 导入流程位于 `backend/app/ingest.py`：读取 manifest 的 `文件名` 字段，将路径解析到 `data/clean/`；从 Markdown 文件和元数据注释读取 ID、标题、类别、来源、更新日期；去掉 front matter/HTML 注释；按标题和段落分段；普通片段最大约 800 字符；保存到 SQLite 的 `documents` 与 `chunks` 表。模型引用的是切片，因此 quote 不一定包含原文件整页文本。
 
-### 需要理解的本地状态
+### 数据库与缓存状态
 
 - SQLite 默认位置是 `backend/knowledge.db`。它一旦有任意文档，CLI 不会自动检查 manifest 后再导入新文件。
 - 向量缓存位于 `backend/data/embeddings/`，包含向量矩阵、chunk ID 列表和模型/后端元数据。切换本地与远端后端、模型名或远端 URL 会使缓存失效并重新生成；API Key 不写入缓存元数据。
-- 缓存仍以 chunk ID 列表判断资料是否变化，未记录每段原文哈希。若 SQLite 原文被修改但 chunk ID 列表不变，向量缓存可能过期；BM25 在每次进程启动时从 SQLite 重建。稳妥重建时同时移除 SQLite 与 `backend/data/embeddings/` 后重启。
+- 缓存以 chunk ID 列表判断资料变化，未记录原文哈希。原文改动但 ID 列表不变时，向量可能过期。更新资料后同时重建 SQLite 与 `backend/data/embeddings/`；BM25 会在进程启动时从 SQLite 重建。
 - 本地 FastEmbed 首次使用可能需要下载。默认重排不再加载或下载 CrossEncoder，而是复用向量矩阵。远端 Embedding API 在建索引时需要服务可达；初始化异常会关闭向量功能并回退 BM25，后续单次查询请求失败则按工具失败处理。
-- 远端 BGE 服务有 512 token 输入上限。为减少长 chunk 触发 400 错误，API 路径把超过 400 字符的片段切成 400 字符窗口、窗口间重叠 50 字符，再平均窗口向量，仍为每个原始 chunk 保存一个向量。查询文本使用相同窗口策略。该字符上限是针对当前服务限制采取的保守近似，不是 tokenizer 精确 token 计数。
+- 当前远端 BGE 服务限制输入为 512 token。API 路径将超过 400 字符的片段拆成重叠 50 字符的窗口，再平均窗口向量；查询使用相同策略。400 字符是针对该服务的保守长度控制，不是精确 token 计数。
 - 远端模式会将 SQLite 中已导入的文档片段和检索 query 发送到 `EMBEDDING_BASE_URL` 指定的服务；API Key 不进入 Trace 或缓存元数据。部署者需确认服务端的数据处理和网络边界适合这些文档。
 
 ## 一轮问题：消息如何组装
@@ -60,7 +60,7 @@ CLI 在 `backend/app/cli.py` 的 `initialize()` 中先调用 `init_db()`。随�
 ]
 ```
 
-`SYSTEM_PROMPT` 要求模型只用工具证据、需要时补充搜索或读原文、冲突时请求确认，并以 JSON 返回 `answer/citations/gaps/status`。工具规格通过 OpenAI 兼容 Chat Completions 的 `tools` 参数一并发送，`tool_choice="auto"` 让模型选择是否调用工具，temperature 为 0.1。项目没有保存一份脱敏后的真实在线请求；上面的代码是协议形状示意。
+`SYSTEM_PROMPT` 要求模型依据工具证据作答、按需补充搜索或读原文、冲突时请求确认，并以 JSON 返回 `answer/citations/gaps/status`。OpenAI 兼容路径通过 `tools` 参数提供工具规格，`tool_choice="auto"` 允许模型选择动作，temperature 为 0.1。上面的代码展示内部消息形状。
 
 模型发出工具调用时，Agent 内部统一为 Assistant 消息的 `tool_calls`，程序逐个执行工具，并把 JSON 工具结果回传模型。下一轮模型请求会继续携带 system、历史、当前问题、assistant tool call 和 tool result。完成本轮后，CLI 的 `next_history()` 只加入 user 问题和 assistant 最终答案，不把内部工具 JSON 作为长期对话历史保存。
 
@@ -89,7 +89,7 @@ SDK 负责鉴权、HTTP 请求和响应对象解析；`_to_anthropic_messages()`
 
 - 参数：`doc_id`。
 - 从 SQLite 取该文档全部切片，按 `chunk_index` 排列，返回标题、版本日期和各段文本。它不重新读取磁盘上的 Markdown 文件，所以磁盘改动必须先重新导入数据库。
-- 若 doc_id 不存在，`execute_tool()` 当前返回 `{"error": "未找到该文档 ID"}`；这不是异常。Agent 会把它作为一个工具结果回传，Trace 不会标出 `tool_error`，虽然它没有增加可引用证据。后续可考虑把“工具返回业务错误”规范为明确的工具失败状态。
+- 若 doc_id 不存在，`execute_tool()` 返回 `{"error": "未找到该文档 ID"}`，Agent 将其作为工具结果回传模型；该结果不提供可引用证据。当前 Trace 不把这种业务错误标为 `tool_error`。
 - 模型应在候选片段不足以判断范围、例外或优先级时读取原文。是否读取由模型判断，不是代码无条件触发。
 
 ### 检索排序
@@ -103,7 +103,7 @@ SDK 负责鉴权、HTTP 请求和响应对象解析；`_to_anthropic_messages()`
 
 `backend/app/reranker.py` 定义 `Reranker` Protocol：输入 query 与候选列表，输出保留候选元数据并带 `rerank_score` 的列表。`EmbeddingSimilarityReranker` 消费向量余弦分，不发起额外请求；`QwenAPIReranker` 调用完整 `RERANK_BASE_URL`，请求形状为 `model/query/documents/top_n`，将响应的 `results` 或 `output.results` 中的 `index`、`relevance_score` 映射回候选。请求格式参照 [Qwen 官方 Reranking 文档](https://docs.qwencloud.com/developer-guides/embeddings/reranking) 的兼容接口示例；自建服务仍可能采用不同 schema，需先用真实 endpoint 验证。对其他兼容服务可以实现同一接口并注册 provider。API 错误沿检索工具失败路径返回，不静默沿用未经重排的结果。
 
-这里没有设置基于相似度分数的硬阈值。检索返回空结果意味着 BM25 没有正分命中，或可用索引未命中；它不等于已证明整个企业知识库不存在答案。输出分数也不是答案置信度。
+当前没有相似度硬阈值。空结果表示本次检索未命中，不能证明资料库中不存在答案；排序分数也不是答案置信度。
 
 ## 最终答案的代码校验
 
@@ -148,13 +148,13 @@ D01（2026-01-10）写“30 天”，D02（2026-02-01）写“15 天”。两份
 | 只保存本次进程中的对话 | 实现简单，离开进程不留员工对话内容 | 无长期记忆、恢复能力和多用户区分 | 需持久化时先明确隐私、保留时间、访问权和删除机制 |
 | 用脚本模型做离线编排测试 | 无需 Key、稳定复现工具循环、失败及冲突守卫 | 不测真实模型决策、检索召回或在线稳定性 | 持续补真实 API Trace、端到端资料替换和固定评测集，不把两类证据混为一谈 |
 
-## 证据边界：已经实现什么、没有保证什么
+## 证据校验的实际范围
 
-- system prompt 是发给模型的要求，不是强制执行的程序逻辑；只有引用白名单、JSON 状态检查、有限数字冲突守卫和异常分支是代码直接执行的检查。
+- system prompt 指导模型；引用白名单、JSON 状态检查、有限数字冲突守卫和异常分支由程序执行。
 - `read_document` 返回的是 SQLite 中已导入的切片，不是实时磁盘文件。
-- 当前测试中注入的工具响应不经过 BM25/向量/RRF/重排，也不经过真正的 SQLite 导入链路；在线召回质量尚未被这些用例证明。
-- Search/read 工具“成功返回”只代表代码执行成功，不代表返回证据完整、适用或正确。
-- `answered` 表示至少有一条引用通过来源白名单，不是人工审核后的“完全正确”。
+- 注入工具响应的测试覆盖 Agent 控制流；真实召回链路的运行记录单独列于[评估文档](03-evaluation.md)。
+- Search/read 工具成功返回表示调用完成；资料是否适用仍须结合原文与问题判断。
+- `answered` 表示至少有一条引用通过来源检查，答案的语义支持程度仍需单独评估。
 
 ## 修改时从哪儿开始
 

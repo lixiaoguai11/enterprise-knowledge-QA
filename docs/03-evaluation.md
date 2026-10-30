@@ -1,10 +1,10 @@
 # 03 — 评估方案、执行结果与已知限制
 
-本文件把“代码路径测试”“离线编排示例”和“真实模型运行”分开。三者回答不同问题，不能互相替代。
+本文件汇总自动化测试、离线编排 Trace 和真实服务运行记录。每项结果都对应可复核的文件，并标明它验证了哪一段链路。
 
 ## 当前运行结论
 
-Anthropic 协议和远端 Embedding 均已有成功的真实调用记录。向量验证首次发现接口的 512 token 上限，代码改为窗口化后，整库向量建索引和 BM25/向量融合检索成功。在线结果只代表当前网关、模型与资料版本，不能替代稳定性和召回质量基准。
+Anthropic 协议、远端 Embedding 和 Qwen rerank 均有真实调用记录。针对 Embedding 服务的 512 token 输入上限，项目加入窗口化处理，随后完成整库向量建索引和混合检索。真实冲突问答成功返回双引用及澄清状态；另一次产品问答在多步工具调用后因最终 JSON 无效而返回 `tool_error`。
 
 | 验证层 | 当前结果 | 可以说明什么 | 不能说明什么 |
 |---|---|---|---|
@@ -20,9 +20,9 @@ Anthropic 协议和远端 Embedding 均已有成功的真实调用记录。向�
 | 真实冲突 Agent 路径 | 2026-10-30 Anthropic-compatible `deepseek-flash` 在真实 Embedding + Qwen rerank 检索后，选择补充搜索并读取 D01/D02 等原文；Conflict Guard 识别 30/15 天冲突，结果为 `needs_clarification`，两份引用齐全，见 [08-live-qwen-reranker.json](../examples/08-live-qwen-reranker.json) | 这条在线路径通过冲突和引用断言，Trace 包含实际工具参数、结果摘要、后续模型动作与简短可观察依据 | 只证明一次运行；不代表真实模型长期稳定或能处理所有冲突类型 |
 | 真实模型补查/读取路径 | 2026-10-30 另一次真实模型运行对产品问题先搜索、再改写 query 搜索并读取多份原文，最终模型输出无法解析为 JSON；Agent 明确返回 `tool_error`，记录见 [09-live-product-question.json](../examples/09-live-product-question.json) | 证明真实模型会根据前次检索结果继续改变工具动作；格式错误被安全处理并保留决策 Trace | 此路径没有得到有效答案，不能记作明确问题验收通过；模型的结构化输出稳定性是当前限制 |
 | 代码风格统一检查 | 当前仅运行 `git diff --check` 检查空白错误；没有配置 Ruff、Black、isort 或 flake8 | `py_compile` 成功；`git diff --check` 未报格式错误 | 语法/空白检查不等于统一的 Python 风格 lint 或自动格式化 |
-| GitHub 发布状态 | 记录到的推送尝试返回 HTTP 403；2026-10-30 本机再次检查时 DNS 无法解析 `github.com` | 当前本地 `main` 为 `d4c8aba562d26e27ebfa46cec300bc7aeb9c9869`；工作区有未提交变更 | 网络恢复后需用 `git ls-remote` 比对远端，再推送；本地提交和未提交改动均不能据此称为已发布 |
+| GitHub 发布记录 | 此前一次推送返回 HTTP 403；2026-10-30 的远端检查因 DNS 解析失败未完成 | 本地运行记录与仓库文件可供审查 | 发布前需重新核对远端 `main` 与本地提交；该记录不表示最新文档已推送 |
 
-在线验证分开保存了冲突成功路径和模型输出格式失败路径。成功的冲突路径在 Qwen rerank 后召回 D01/D02，读取原文并返回 `needs_clarification`，见 [08-live-qwen-reranker.json](../examples/08-live-qwen-reranker.json)；另一次产品查询展示模型选择补充检索及读原文，但最终结构化输出无效，Agent 返回 `tool_error`，见 [09-live-product-question.json](../examples/09-live-product-question.json)。较早的 Anthropic 成功 Trace 见 [05-live-anthropic-success.json](../examples/05-live-anthropic-success.json)。这些 Trace 记录真实模型的可观察动作，不代表内部思维过程。
+两条在线 Agent 路径可对照阅读：[冲突澄清](../examples/08-live-qwen-reranker.json)在检索 D01/D02 后继续读原文，最终返回 `needs_clarification`；[产品问题](../examples/09-live-product-question.json)触发改写搜索与原文读取，最终因 JSON 无效返回 `tool_error`。较早的 [Anthropic 成功记录](../examples/05-live-anthropic-success.json)可用于复核协议适配。Trace 只记录可观察动作与结果摘要。
 
 ## 自动化测试覆盖
 
@@ -46,7 +46,7 @@ Anthropic 协议和远端 Embedding 均已有成功的真实调用记录。向�
 10. 与当前问题无关的数字差异不会触发冲突保护。
 11. CLI 格式化会显示状态、引用、缺口和工具 Trace。
 
-注：测试数量以本次执行的 16 项为准；函数级用例不等于同样数量的线上场景或模型运行。
+上述 16 项是本次执行的函数级测试数量；在线运行按独立 Trace 统计。
 
 ## 示例 Trace 怎么看
 
@@ -62,7 +62,7 @@ Anthropic 协议和远端 Embedding 均已有成功的真实调用记录。向�
 - [08-live-qwen-reranker.json](../examples/08-live-qwen-reranker.json)：真实模型的冲突路径，包含 Qwen 检索、观察摘要、后续模型动作和澄清输出。
 - [09-live-product-question.json](../examples/09-live-product-question.json)：真实模型的补查/读原文路径；本次最终 JSON 无效，Agent 返回 `tool_error`，是失败记录而非成功答案。
 
-每份 Trace 的 `run_mode` 都标记脚本化模型/工具替身。Trace 中的 `cli_output` 是真实 formatter 输出，但不是一次线上模型或真实检索的结果。`mutation_check` 从 Markdown 文本取出 30/20 天并把它作为替身工具的证据；它证明 Agent 将变化后的证据传导到回答和引用，不证明 SQLite 重新导入、BM25 命中或向量缓存已刷新。
+`01`—`03` 的 `run_mode` 标记为脚本化模型与工具替身；其中的 `cli_output` 来自真实 formatter，但不代表在线模型或真实检索。`08`、`09` 是真实服务运行记录。`mutation_check` 把从 Markdown 读取的 30/20 天作为替身工具证据，验证 Agent 随证据变化调整答案和引用；数据库重导入与向量缓存刷新仍需端到端验证。
 
 ## 对必须验收场景的结论
 
@@ -76,7 +76,7 @@ Anthropic 协议和远端 Embedding 均已有成功的真实调用记录。向�
 | 工具失败 | 注入异常，返回 `tool_error` 通过 | 未模拟所有 SQLite、模型下载和 API 错误类型 |
 | 资料替换 | Agent 层证据替换通过 | 端到端检查还需重建 DB/缓存并再次实际检索 |
 
-## 真正的端到端验收步骤
+## 后续端到端验收步骤
 
 以下步骤仍需继续完成，执行后把真实输出与模型版本、日期、资料版本、缓存状态追加到示例或独立 Trace：
 
@@ -89,7 +89,7 @@ Anthropic 协议和远端 Embedding 均已有成功的真实调用记录。向�
 7. 在本地副本中把 D01 的 30 天改成 20 天，并把 D02 改为相同值测试冲突解除；重建数据库和 `backend/data/embeddings/` 缓存，再确认答案、quote 或澄清动作改变。
 8. 暂时让检索工具失败或使用受控替身，确认结果为 `tool_error`，没有伪造答案。
 
-不要把 API Key、企业敏感内容、含敏感数据的原文放到示例 Trace。
+示例 Trace 只保存可公开的输入、结果和必要的工具摘要，不写入 API Key 或企业敏感资料。
 
 ## 已知失败、限制和风险
 
@@ -103,6 +103,6 @@ Anthropic 协议和远端 Embedding 均已有成功的真实调用记录。向�
 - **对话历史仅内存**：进程重启即丢失；当前不支持用户隔离、恢复和历史删除流程。
 - **数据覆盖并非统一政策**：真实企业文件和合成演示资料同时在 `data/clean/` 中；这方便复用数据管道，但正式部署前必须确认每份文件来源、授权和适用对象。
 
-## 最终验收状态
+## 本次评估结论
 
-本次执行 `pytest` 为 16 项通过；离线编排脚本有 6 个场景。真实 Qwen rerank 与冲突问答成功，模型输出格式失败的真实路径也已保留。当前无 Ruff/Black 等统一代码风格检查；资料替换端到端验收、成功的真实单证据回答和固定集排序指标仍未完成。Git 工作区已清洁，本地 `main` 新增三个提交；本机 `git ls-remote origin refs/heads/main` 因无法解析 `github.com` 失败，所以远端最新 SHA 未确认，也未推送。历史推送曾返回 HTTP 403。项目累计开发工时没有连续计时记录，不能准确还原；本轮考核规则核对与补齐用时约 3 小时。评审时应按各自 Trace 区分已验证、失败和未覆盖范围。
+本次记录包括 16 项通过的 pytest 测试、6 个离线编排场景、真实 Qwen rerank 与冲突澄清成功路径，以及一条模型最终 JSON 无效的真实失败路径。成功的真实单证据回答、资料替换后的端到端检索和固定集排序指标仍待补齐；代码风格目前只做了语法与空白检查，尚无统一 lint/format 配置。此前 GitHub 推送和远端状态核对未完成，最新发布状态须在交付时重新检查。本轮考核规则核对、决策 Trace 和文档补齐按实际工作记录为 3 小时；该数字不代表项目累计开发工时。

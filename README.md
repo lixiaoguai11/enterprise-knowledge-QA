@@ -1,6 +1,6 @@
 # 企业知识增强 Agent
 
-面向员工的知识库问答终端工具。Agent 通过混合检索找到制度或产品资料，再自行决定是否补充检索、读取文档原文、追问或结束。回答附带文档 ID、版本日期和可核对的原文引用；冲突资料不会被擅自归并成单一答案。
+员工可在终端查询制度和产品资料。Agent 根据检索结果决定继续搜索、读取原文、请求澄清或结束，并在回答中列出文档 ID、版本日期和原文引用。资料相互冲突时，系统展示各方依据及待确认的适用规则。
 
 ## 提交信息
 
@@ -11,14 +11,14 @@
 
 ## 环境
 
-- Python 3.12 或更新版本
-- 当前所选 provider 的 API Key（DeepSeek 或 Anthropic；真实模型问答需要）
-- CLI 启动时若配置了 Embedding API Key，会用远端服务建立向量索引；否则加载本地 FastEmbed。默认用 BGE embedding 余弦相似度重排，不下载 CrossEncoder；向量初始化失败时会退回 BM25
-- 不需要 Node.js、Docker、GPU 或 Web 服务
+- Python 3.12+ 和 uv
+- 所选模型服务的 API Key（真实模型问答需要）
+- 可用的 Embedding 服务，或首次运行时可下载本地 FastEmbed 模型的网络环境；向量初始化失败时检索回退至 BM25
+- 无需 Node.js、Docker、GPU 或 Web 服务
 
 ## 快速使用（Windows PowerShell）
 
-先在仓库根目录创建环境、安装依赖并准备配置文件。若 `.env` 已存在，下面的命令不会覆盖它：
+在仓库根目录执行以下命令。已有的 `.env` 不会被覆盖：
 
 ```powershell
 uv venv --python 3.12
@@ -29,7 +29,7 @@ notepad .env
 
 `.env` 位于仓库根目录。通过 `LLM_PROVIDER` 选择模型接口：`deepseek` 使用 OpenAI 兼容 Chat Completions，`anthropic` 使用 Anthropic Messages API。DeepSeek 配置 `DEEPSEEK_API_KEY`，可选 `DEEPSEEK_BASE_URL` 与 `MODEL_NAME`；Anthropic 配置 `ANTHROPIC_API_KEY`、`ANTHROPIC_BASE_URL` 和 `ANTHROPIC_MODEL`。使用 Anthropic 协议兼容网关时，把服务商提供的 URL 填入 `ANTHROPIC_BASE_URL`，并选 `LLM_PROVIDER=anthropic`。
 
-向量检索可选使用 OpenAI 兼容 Embedding 服务，配置 `EMBEDDING_API_KEY`、`EMBEDDING_MODEL_NAME` 和 `EMBEDDING_BASE_URL`。配置非空 Key 后，程序用远端接口生成文档片段与问题向量；Key 为空时回退至本地 FastEmbed 模型。`.env.example` 只提供占位配置，真实地址和凭据应放在本机 `.env`，不要提交。
+向量检索可通过 `EMBEDDING_API_KEY`、`EMBEDDING_MODEL_NAME` 和 `EMBEDDING_BASE_URL` 接入 OpenAI 兼容服务。配置 Key 后，文档片段和问题会发送至该服务生成向量；未配置时使用本地 FastEmbed。真实地址和凭据只写入本机 `.env`。
 
 例如切换到 Anthropic 格式（把 URL、Key 和模型替换为服务商给你的值）：
 
@@ -40,7 +40,7 @@ ANTHROPIC_BASE_URL=https://api.anthropic.com
 ANTHROPIC_MODEL=claude-sonnet-4-5
 ```
 
-修改 `.env` 后重新启动 CLI。Anthropic 专用变量优先；未填写时，程序会回退使用已有的 `DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL` 和 `MODEL_NAME`，便于对同一网关切换协议，不必重复复制密钥。`ANTHROPIC_BASE_URL` 可以是服务根地址，也可以带结尾 `/v1`；适配器会去掉结尾 `/v1`，SDK 随后请求 `/v1/messages`。
+修改 `.env` 后重启 CLI。Anthropic 专用变量优先；未填写时使用对应的 DeepSeek 变量，便于同一网关切换协议。`ANTHROPIC_BASE_URL` 可填写服务根地址或以 `/v1` 结尾的地址；适配器会规范化地址，由 SDK 请求 `/v1/messages`。
 
 启动交互式 CLI：
 
@@ -49,29 +49,26 @@ cd backend
 ..\.venv\Scripts\python.exe -m app.cli
 ```
 
-数据库为空时，启动会将 `data/clean` 中的 Markdown 文档导入本地 SQLite，并建立 BM25 索引；可用时还会启用向量检索和 BGE embedding 相似度重排。若数据库已有文档，启动不会自动重新导入资料。提问后可继续追问以使用当前进程内的对话上下文。
+数据库为空时，启动会导入 `data/clean` 中的 Markdown 文档，建立 BM25 索引，并在向量后端可用时启用向量检索和 BGE embedding 相似度重排。已有数据库不会自动重新导入资料。当前进程保留对话上下文，可直接追问。
 
 `RERANKER_PROVIDER=bge_similarity` 会复用 BGE embedding 给候选片段打余弦相似度分；`RERANKER_PROVIDER=qwen_api` 会调用 `RERANK_BASE_URL`，并使用 `RERANK_API_KEY`、`RERANK_MODEL_NAME`；`none` 可关闭第二阶段重排。`.env.example` 默认使用无需额外 API 的 BGE 相似度模式。远端 API adapter 实现了 `backend/app/reranker.py` 的统一接口，API 失败会作为检索工具失败返回，不会静默假装重排成功。
 
-若启用你提供的 Qwen rerank 服务，在本机 `.env` 中设置 `RERANKER_PROVIDER=qwen_api` 以及 `RERANK_API_KEY`、`RERANK_MODEL_NAME`、`RERANK_BASE_URL`。程序会向该完整 URL POST JSON，body 包含 `model`、`query`、`documents`、`top_n`，并读取 `results` 中的 `index` 与 `relevance_score` 排序。不同网关的请求结构可能有差异，首次配置需用在线 smoke 验证。
+启用 Qwen rerank 服务时，在本机 `.env` 中设置 `RERANKER_PROVIDER=qwen_api`、`RERANK_API_KEY`、`RERANK_MODEL_NAME` 和 `RERANK_BASE_URL`。程序向完整 URL 发送包含 `model`、`query`、`documents`、`top_n` 的 JSON，并按返回的 `index` 与 `relevance_score` 排序。接入新网关后，用在线 smoke 检查其请求和响应结构。
 
 - `/help`：查看可用命令
 - `/new`：清空当前对话上下文
 - `/exit`：退出
 
-输入自然语言问题即可开始问答。每轮输出回答、引用原文及文档版本、资料缺口、任务状态和本轮工具 Trace。
-
-从首次接手仓库的角度阅读：[docs/00-start-here.md](docs/00-start-here.md)。它给出目录地图、代码走读顺序和常见排查方法。
-
-每轮显示答案、状态、引用（文档 ID、版本日期、原句）、资料缺口和工具 Trace。状态包括 `answered`、`needs_clarification`、`insufficient_evidence`、`tool_error` 和达到调用上限时的 `incomplete`。
+输入问题后，每轮会显示答案、状态、引用（文档 ID、版本日期和原句）、资料缺口及工具 Trace。状态包括 `answered`、`needs_clarification`、`insufficient_evidence`、`tool_error` 和达到调用上限时的 `incomplete`。首次接手项目可先读[开发者导览](docs/00-start-here.md)。
 
 ## 评审入口
 
 - 需求与成功标准：[docs/01-requirements.md](docs/01-requirements.md)
 - 新手导览与排查：[docs/00-start-here.md](docs/00-start-here.md)
+- 项目架构图与模块边界：[docs/06-architecture.md](docs/06-architecture.md)
 - Agent 流程与设计取舍：[docs/02-solution.md](docs/02-solution.md)
 - 评估结果、场景和限制：[docs/03-evaluation.md](docs/03-evaluation.md)
-- AI 辅助开发与个人复核：[docs/04-ai-usage.md](docs/04-ai-usage.md)
+- AI 使用范围与作者贡献：[docs/04-ai-usage.md](docs/04-ai-usage.md)
 - 复盘与后续工作：[docs/05-retrospective.md](docs/05-retrospective.md)
 - 脚本化与真实模型的输入、输出和 Trace：[examples/](examples/)
 - 真实模型请求超时记录：[examples/04-live-deepseek-timeout.json](examples/04-live-deepseek-timeout.json)
@@ -83,7 +80,7 @@ cd backend
 .venv\Scripts\python.exe -m pytest -q
 ```
 
-测试采用脚本化模型与隔离 SQLite，不会请求模型服务。真实模型运行需配置当前 provider 的 API Key，并在 Trace 中标注 provider、模型名和运行日期。
+自动化测试使用脚本化模型与隔离 SQLite，不请求模型服务。真实模型运行需要配置所选 provider 的 API Key；Trace 记录 provider、模型名和运行日期。
 
 无需模型 API Key 或下载检索模型，即可单独复跑 Agent 的离线编排 Trace（使用脚本化模型和工具替身，不验证真实检索）：
 
@@ -97,7 +94,7 @@ cd backend
 .venv\Scripts\python.exe scripts/run_live_api_smoke.py --run-live
 ```
 
-在线验证与 pytest 替身测试分开运行。若 API 不可达、模型输出无法解析或没有达到各路径断言，脚本会以非零状态退出并保留 Trace，便于排错。`decision_basis` 是根据可观察的工具结果与模型所选动作生成的简短摘要，不包含模型内部思维过程；真实 API 结果会波动，应同时阅读失败记录。
+在线验证与 pytest 分开运行。API 不可达、模型输出无法解析或路径断言失败时，脚本以非零状态退出并保留 Trace。`decision_basis` 根据工具结果和模型所选动作生成，只描述可观察的依据。成功与失败记录均见[评估文档](docs/03-evaluation.md)。
 
 ## 资料格式和重建索引
 

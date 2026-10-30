@@ -1,6 +1,6 @@
 # 从零开始：项目导览与开发路径
 
-这份说明面向第一次接手仓库的开发者。目标不是要求你先读懂所有 Agent 或检索术语，而是让你从一个终端问题出发，找到输入、检索、模型、引用检查和最终输出分别发生在哪里。
+从一次终端提问入手，沿着输入、检索、模型决策、引用检查和输出逐步定位代码。第一次接手项目时，可按本页顺序阅读和运行。
 
 ## 先知道项目做什么
 
@@ -15,27 +15,27 @@
   -> CLI 展示答案、引用、资料缺口和 Trace
 ```
 
-这是一个本机演示项目。它没有组织账号、权限隔离、远端文档服务、审计保留或生产 SLA。示例制度是合成数据，不代表真实公司政策。
+当前运行范围是本机 CLI；示例制度使用合成资料。接入真实企业资料前，还需设计身份、文档权限与审计保留机制。
 
 ## 运行前要准备什么
 
 - Python 3.12+
 - uv
-- 真实问答所需的当前 provider API Key
-- 首次启用向量检索和重排时可访问模型下载源的网络
+- 真实问答所需的模型服务 API Key
+- 使用本地 FastEmbed 时，首次运行可访问模型下载源；使用远端 Embedding 时，服务地址可达
 
-仓库根目录的 `.env.example` 是配置模板。将它复制为根目录 `.env`，并填入 `DEEPSEEK_API_KEY`。`.env` 已被 Git 忽略，不能提交密钥。
+仓库根目录的 `.env.example` 是配置模板。复制为 `.env`，按所选 provider 填写 DeepSeek 或 Anthropic 变量。`.env` 已被 Git 忽略，密钥只保存在本机。
 
 ```powershell
 uv venv --python 3.12
 uv pip install --python .venv\Scripts\python.exe -r backend\requirements.txt
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 # 编辑 .env 并填写当前 provider 的配置
 cd backend
 ..\.venv\Scripts\python.exe -m app.cli
 ```
 
-成功启动后可输入问题，或用 `/help`、`/new`、`/exit` 管理会话。真实 API 曾完成冲突澄清，也出现过模型最终 JSON 无法解析；请读 [03-evaluation.md](03-evaluation.md) 区分成功、失败和未覆盖场景。
+启动后输入问题，或用 `/help`、`/new`、`/exit` 管理会话。真实 API 的成功与失败记录见[评估文档](03-evaluation.md)。
 
 ## 新手建议按这个顺序阅读和动手
 
@@ -43,8 +43,8 @@ cd backend
 2. 读 [01-requirements.md](01-requirements.md)，把“可靠回答”拆成可以检查的验收场景。
 3. 打开 `backend/app/cli.py` 的 `initialize()` 和 `repl()`，顺着启动和一次提问看调用。
 4. 打开 `backend/app/qa_agent.py` 的 `run_question()`，这是动态决策主循环；接着看 `knowledge_tools.py` 和 `retrieval.py`。
-5. 阅读 [02-solution.md](02-solution.md) 对照工具消息、证据结构、检索和状态含义。
-6. 跑离线 Trace 和 pytest，再将结果与 [03-evaluation.md](03-evaluation.md) 里的局限对照。
+5. 先看[项目架构图](06-architecture.md)，再读[方案文档](02-solution.md)，对照工具消息、证据结构和状态含义。
+6. 跑离线 Trace 和 pytest，再用[评估文档](03-evaluation.md)核对各项结果的验证范围。
 7. 修改一份合成资料前，记录原答案、引用和任务状态；修改后重建数据/索引，再比较四者是否随证据变化。
 
 ## 关键目录
@@ -64,8 +64,8 @@ cd backend
 
 ## 新手排查清单
 
-- **提示未配置 Key**：确认文件名是仓库根目录 `.env`，不是 `backend/.env`；填写 `DEEPSEEK_API_KEY` 后重新开进程。
-- **启动很久没有出现输入提示**：启动会尝试初始化向量和重排模型，首次下载受网络影响。当前实现会在加载异常后报告并回退 BM25，但下载超时本身可能让等待变长。
+- **提示未配置 Key**：确认 `.env` 位于仓库根目录，并填写当前 `LLM_PROVIDER` 对应的 API Key；保存后重启进程。
+- **启动很久没有出现输入提示**：程序会构建向量索引；本地 FastEmbed 首次使用可能下载模型，远端模式则需要等待 Embedding 服务。初始化异常会报告并回退 BM25，网络超时仍可能延长启动时间。
 - **新增资料后查不到**：核对 `manifest.csv` 的相对路径和文档 ID。数据库已有文档时 CLI 不会自动重新导入；按 README 指引重建 SQLite 和向量缓存。
 - **答案引用不存在或不完整**：看 Trace 是否有检索或读原文结果；`answered` 没有工具原文引用会降级。引用白名单只验证引用片段来自工具返回，不证明答案中每个推论都被引用蕴含。
 - **冲突没有被抓到**：代码中的冲突守卫只检查同一问题相关、单位相同且归一化句式相同的数字值差异。隐含范围、跨段落或完全不同写法仍需模型识别与人工评测。
@@ -75,6 +75,7 @@ cd backend
 
 - [01 — 需求与成功标准](01-requirements.md)：为什么做、做什么、如何判断完成。
 - [02 — 方案与调用流程](02-solution.md)：从提问到输出的实际代码路径、检索决策与取舍。
+- [06 — 项目架构图](06-architecture.md)：运行时组件、启动建库和 ReAct 工具循环图。
 - [03 — 评估结果](03-evaluation.md)：测试证据、Trace、未覆盖范围和当前阻塞。
-- [04 — AI 使用记录](04-ai-usage.md)：AI 辅助范围、开发者选择、复核和隐私边界。
+- [04 — AI 使用与作者贡献](04-ai-usage.md)：作者的业务、技术和验证决策，以及 AI 的代码与文字编辑工作。
 - [05 — 复盘与下一步](05-retrospective.md)：开发者从 0 到 1 的决策记录、教训和优先事项。
