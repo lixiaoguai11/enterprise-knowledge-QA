@@ -5,10 +5,19 @@ import re
 from dataclasses import asdict, dataclass, field
 from typing import Any, Callable
 
-from app.config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL, MODEL_NAME
+from app.config import (
+    ANTHROPIC_API_KEY,
+    ANTHROPIC_BASE_URL,
+    ANTHROPIC_MODEL,
+    DEEPSEEK_API_KEY,
+    DEEPSEEK_BASE_URL,
+    LLM_PROVIDER,
+    MODEL_NAME,
+)
 from app.knowledge_tools import TOOL_SPECS, execute_tool
 
 MAX_TOOL_ROUNDS = 6
+MAX_TOOL_CALLS = 8
 STATUSES = {"answered", "needs_clarification", "insufficient_evidence"}
 
 SYSTEM_PROMPT = """你是企业知识问答 Agent，只能依据工具返回的知识库证据回答制度和产品问题。
@@ -38,19 +47,140 @@ class AgentResult:
 
 
 def call_model(messages: list[dict[str, Any]], tools: list[dict]) -> Any:
-    if not DEEPSEEK_API_KEY:
-        raise RuntimeError("未配置 DEEPSEEK_API_KEY，请复制仓库根目录的 .env.example 为 .env 并填写")
-    from openai import OpenAI
+    if LLM_PROVIDER == "deepseek":
+        if not DEEPSEEK_API_KEY:
+            raise RuntimeError("LLM_PROVIDER=deepseek 时必须配置 DEEPSEEK_API_KEY")
+        from openai import OpenAI
 
-    client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_BASE_URL)
-    response = client.chat.completions.create(
-        model=MODEL_NAME,
-        messages=messages,
-        tools=tools,
-        tool_choice="auto",
-        temperature=0.1,
+        client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_BASE_URL)
+        response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=messages,
+            tools=tools,
+            tool_choice="auto",
+            temperature=0.1,
+        )
+        return response.choices[0].message
+
+    if LLM_PROVIDER == "anthropic":
+        if not ANTHROPIC_API_KEY:
+            raise RuntimeError("LLM_PROVIDER=anthropic 时必须配置 ANTHROPIC_API_KEY")
+        from anthropic import Anthropic
+
+        system, anthropic_messages = _to_anthropic_messages(messages)
+        anthropic_base_url = ANTHROPIC_BASE_URL.rstrip("/")
+        # The Anthropic SDK appends /v1/messages. OpenAI-compatible gateways
+        # commonly store a /v1 suffix in their base URL; remove that suffix
+        # before using the same gateway with the native Messages protocol.
+        if anthropic_base_url.endswith("/v1"):
+            anthropic_base_url = anthropic_base_url[:-3]
+        response = Anthropic(
+            api_key=ANTHROPIC_API_KEY,
+            base_url=anthropic_base_url,
+        ).messages.create(
+            model=ANTHROPIC_MODEL,
+            system=system,
+            messages=anthropic_messages,
+            tools=_to_anthropic_tools(tools),
+            max_tokens=2048,
+        )
+        return _from_anthropic_response(response)
+
+    raise RuntimeError(
+        f"不支持的 LLM_PROVIDER={LLM_PROVIDER!r}；可选值为 deepseek 或 anthropic"
     )
-    return response.choices[0].message
+
+
+def _to_anthropic_tools(tools: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Translate OpenAI function tool schemas to Anthropic Messages tools."""
+    converted = []
+    for item in tools:
+        function = item.get("function", item)
+        converted.append(
+            {
+                "name": function["name"],
+                "description": function.get("description", ""),
+                "input_schema": function.get("parameters", {"type": "object", "properties": {}}),
+            }
+        )
+    return converted
+
+
+def _to_anthropic_messages(
+    messages: list[dict[str, Any]],
+) -> tuple[str, list[dict[str, Any]]]:
+    """Translate the agent's provider-neutral conversation to Messages format."""
+    system_parts = [str(item.get("content", "")) for item in messages if item.get("role") == "system"]
+    converted: list[dict[str, Any]] = []
+    for index, item in enumerate(messages):
+        role = item.get("role")
+        if role in {"system", "tool"}:
+            continue
+        if role == "assistant" and item.get("tool_calls"):
+            blocks: list[dict[str, Any]] = []
+            text = item.get("content")
+            if text:
+                blocks.append({"type": "text", "text": str(text)})
+            for call in item["tool_calls"]:
+                function = call.get("function", {})
+                try:
+                    arguments = json.loads(function.get("arguments") or "{}")
+                except json.JSONDecodeError:
+                    arguments = {}
+                blocks.append(
+                    {
+                        "type": "tool_use",
+                        "id": call["id"],
+                        "name": function["name"],
+                        "input": arguments,
+                    }
+                )
+            converted.append({"role": "assistant", "content": blocks})
+        elif role in {"user", "assistant"}:
+            converted.append({"role": role, "content": str(item.get("content") or "")})
+        else:
+            raise ValueError(f"无法转换到 Anthropic Messages API 的消息角色：{role!r}")
+
+        # OpenAI tool replies are represented as separate role=tool messages.
+        # Attach them to a user message containing Anthropic tool_result blocks.
+        tool_results = []
+        for reply in messages[index + 1 :]:
+            if reply.get("role") != "tool":
+                break
+            tool_results.append(
+                {
+                    "type": "tool_result",
+                    "tool_use_id": reply["tool_call_id"],
+                    "content": str(reply.get("content", "")),
+                }
+            )
+        if tool_results:
+            converted.append({"role": "user", "content": tool_results})
+
+    return "\n\n".join(part for part in system_parts if part), converted
+
+
+def _from_anthropic_response(response: Any) -> Any:
+    """Normalize Anthropic content blocks to the shape used by the agent loop."""
+    from types import SimpleNamespace
+
+    text_parts = []
+    tool_calls = []
+    for block in response.content:
+        if block.type == "text":
+            text_parts.append(block.text)
+        elif block.type == "tool_use":
+            tool_calls.append(
+                SimpleNamespace(
+                    id=block.id,
+                    type="function",
+                    function=SimpleNamespace(
+                        name=block.name,
+                        arguments=json.dumps(block.input, ensure_ascii=False),
+                    ),
+                )
+            )
+    return SimpleNamespace(content="\n".join(text_parts) or None, tool_calls=tool_calls)
 
 
 def _message_dict(message: Any) -> dict[str, Any]:
@@ -74,6 +204,61 @@ def _message_dict(message: Any) -> dict[str, Any]:
 
 def _fallback(status: str, answer: str, trace: list[dict], used: list[str], rounds: int) -> AgentResult:
     return AgentResult(answer=answer, status=status, trace=trace, tools_used=used, rounds=rounds)
+
+
+def _summarize_tool_result(name: str, result: Any) -> dict[str, Any]:
+    """Keep a compact, inspectable observation in the run trace."""
+    if name == "search_documents" and isinstance(result, list):
+        return {
+            "count": len(result),
+            "documents": [
+                {
+                    "doc_id": str(item.get("doc_id", "")),
+                    "title": str(item.get("title", "")),
+                    "version_date": str(item.get("version_date", "")),
+                    "quote_preview": str(item.get("quote", ""))[:240],
+                }
+                for item in result[:10]
+                if isinstance(item, dict)
+            ],
+        }
+    if name == "read_document" and isinstance(result, dict):
+        sections = result.get("sections", [])
+        return {
+            "doc_id": str(result.get("doc_id", "")),
+            "section_count": len(sections) if isinstance(sections, list) else 0,
+            "sections": [
+                {
+                    "heading": str(section.get("heading", "")),
+                    "quote_preview": str(section.get("text", ""))[:240],
+                }
+                for section in sections[:10]
+                if isinstance(section, dict)
+            ] if isinstance(sections, list) else [],
+        }
+    return {"type": type(result).__name__}
+
+
+def _decision_basis(name: str, arguments: dict[str, Any], trace: list[dict]) -> str:
+    """Summarize observable inputs to a model-selected action, never model CoT."""
+    previous = next(
+        (item for item in reversed(trace) if item.get("action") in {"search_documents", "read_document"}),
+        None,
+    )
+    if previous is None:
+        return "根据当前问题，模型选择先从知识库获取证据。"
+    if previous["action"] == "search_documents":
+        count = previous.get("result_count", 0)
+        if count == 0 and name == "search_documents":
+            return "上次检索没有候选，模型选择使用新查询补充检索。"
+        if name == "read_document":
+            return f"上次检索返回 {count} 条候选片段，模型选择读取 {arguments.get('doc_id', '指定文档')} 原文核对上下文。"
+        if name == "search_documents":
+            return f"上次检索返回 {count} 条候选后，模型选择用新查询继续补充检索。"
+    doc_id = previous.get("arguments", {}).get("doc_id", "文档")
+    if name == "search_documents":
+        return f"读取 {doc_id} 原文后，模型选择继续检索以补充证据。"
+    return f"读取 {doc_id} 原文后，模型选择再核验 {arguments.get('doc_id', '其他文档')}。"
 
 
 def _parse_final(question: str, content: str | None, evidence: list[dict], trace: list[dict], used: list[str], rounds: int) -> AgentResult:
@@ -213,6 +398,7 @@ def run_question(
     model: Callable[[list[dict[str, Any]], list[dict]], Any] | None = None,
     tool_executor: Callable[[str, dict[str, Any]], Any] | None = None,
     max_rounds: int = MAX_TOOL_ROUNDS,
+    max_tool_calls: int = MAX_TOOL_CALLS,
 ) -> AgentResult:
     if not question.strip():
         raise ValueError("问题不能为空")
@@ -226,6 +412,7 @@ def run_question(
     evidence: list[dict] = []
     trace: list[dict] = []
     used: list[str] = []
+    tool_call_count = 0
     for round_number in range(1, max_rounds + 1):
         try:
             message = invoke_model(messages, TOOL_SPECS)
@@ -235,12 +422,33 @@ def run_question(
         messages.append(_message_dict(message))
         calls = getattr(message, "tool_calls", None) or []
         if not calls:
+            trace.append({
+                "action": "model_final",
+                "decision_basis": "模型本轮未请求更多工具，返回最终结构化结果。",
+            })
             return _parse_final(question, getattr(message, "content", None), evidence, trace, used, round_number)
         for call in calls:
+            if tool_call_count >= max_tool_calls:
+                trace.append({"action": "agent_limit", "max_tool_calls": max_tool_calls})
+                return _fallback(
+                    "incomplete",
+                    "达到单轮工具调用次数上限，任务未完成；请补充或简化问题后重试。",
+                    trace,
+                    used,
+                    round_number,
+                )
             name = call.function.name
+            tool_call_count += 1
             used.append(name)
             try:
                 arguments = json.loads(call.function.arguments or "{}")
+                trace.append({
+                    "action": "model_tool_choice",
+                    "tool": name,
+                    "arguments": arguments,
+                    "decision_basis": _decision_basis(name, arguments, trace),
+                    "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。",
+                })
                 result = execute(name, arguments)
                 if name == "search_documents" and isinstance(result, list):
                     evidence.extend(result)
@@ -261,7 +469,12 @@ def run_question(
                     result_count = len(result.get("sections", []))
                 else:
                     result_count = None
-                trace.append({"action": name, "arguments": arguments, "result_count": result_count})
+                trace.append({
+                    "action": name,
+                    "arguments": arguments,
+                    "result_count": result_count,
+                    "result_summary": _summarize_tool_result(name, result),
+                })
                 content = json.dumps(result, ensure_ascii=False)
             except Exception as exc:
                 trace.append({"action": name, "error": str(exc)})

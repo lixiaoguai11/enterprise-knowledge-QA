@@ -42,7 +42,7 @@ def test_clear_answer_has_exact_citation():
     result = run_question("报销要上传什么", model=model, tool_executor=lambda *_: evidence)
     assert result.status == "answered"
     assert result.citations[0]["quote"] == evidence[0]["quote"]
-    assert result.trace[0]["action"] == "search_documents"
+    assert any(item["action"] == "search_documents" for item in result.trace)
 
 
 def test_conflicting_documents_are_both_cited_and_require_clarification():
@@ -60,7 +60,7 @@ def test_conflicting_documents_are_both_cited_and_require_clarification():
     result = run_question("报销期限多久", model=model, tool_executor=execute)
     assert result.status == "needs_clarification"
     assert {item["doc_id"] for item in result.citations} == {"D01", "D02"}
-    assert result.trace[1]["action"] == "read_document"
+    assert any(item["action"] == "read_document" for item in result.trace)
     assert result.trace[-1]["action"] == "conflict_guard"
 
 
@@ -108,7 +108,7 @@ def test_tool_failure_returns_failed_status_and_trace():
         raise OSError("index unavailable")
     result = run_question("报销期限多久", model=model, tool_executor=fail)
     assert result.status == "tool_error"
-    assert result.trace[0]["error"] == "index unavailable"
+    assert next(item for item in result.trace if "error" in item)["error"] == "index unavailable"
     assert result.citations == []
 
 
@@ -117,6 +117,28 @@ def test_tool_round_limit_is_reported_as_incomplete():
     result = run_question("报销期限多久", model=model, tool_executor=lambda *_: [], max_rounds=1)
     assert result.status == "incomplete"
     assert result.trace[-1]["action"] == "agent_limit"
+
+
+def test_tool_call_limit_is_enforced_even_for_parallel_model_calls():
+    response = SimpleNamespace(
+        content=None,
+        tool_calls=[
+            SimpleNamespace(id=f"call-{index}", function=SimpleNamespace(
+                name="search_documents", arguments=json.dumps({"query": f"q{index}"})
+            ))
+            for index in range(3)
+        ],
+    )
+    executed = []
+    result = run_question(
+        "报销期限多久",
+        model=ScriptedModel([response]),
+        tool_executor=lambda name, args: executed.append((name, args)) or [],
+        max_tool_calls=1,
+    )
+    assert result.status == "incomplete"
+    assert len(executed) == 1
+    assert result.trace[-1] == {"action": "agent_limit", "max_tool_calls": 1}
 
 
 def test_replacing_source_value_changes_supported_answer():
@@ -166,3 +188,18 @@ def test_cli_output_displays_citations_gaps_status_and_trace():
     assert "状态：answered" in rendered
     assert "D03" in rendered and "提交前核对部门。" in rendered
     assert "成本中心未说明" in rendered and "search_documents" in rendered
+
+
+def test_trace_has_model_choice_basis_and_observation_summary():
+    evidence = [{"doc_id": "D03", "title": "流程", "version_date": "2026-03-01", "quote": "提交前核对部门。"}]
+    model = ScriptedModel([
+        tool_call("search_documents", {"query": "报销"}),
+        final({"answer": "提交前核对部门。", "citations": [{"doc_id": "D03", "quote": evidence[0]["quote"]}], "gaps": [], "status": "answered"}),
+    ])
+    result = run_question("报销怎么做", model=model, tool_executor=lambda *_: evidence)
+    choice = next(item for item in result.trace if item["action"] == "model_tool_choice")
+    observation = next(item for item in result.trace if item["action"] == "search_documents")
+    assert choice["tool"] == "search_documents"
+    assert choice["decision_basis"]
+    assert observation["result_summary"]["documents"][0]["doc_id"] == "D03"
+    assert result.trace[-1]["action"] == "model_final"
