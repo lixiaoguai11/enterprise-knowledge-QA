@@ -25,14 +25,16 @@
 4. 同一问题得到相互矛盾的资料时，日期新旧本身不能代表范围与优先级；系统应列明冲突并询问，而非猜一个值。
 5. 找不到材料、工具报错、模型报错、工具循环耗尽要有不同状态，让员工区分“不知道”与“系统坏了”。
 6. 以可重复的脚本化测试覆盖动态路径，并把模拟结果与真实模型结果分开记录。
+7. 留下至少两条真实模型驱动的运行路径，能看到模型因工具结果不同而选择补查、读原文或结束；记录工具参数、返回摘要、后续动作和简短的可观察依据，不记录模型内部思维过程。
+8. 限制每轮执行长度；达到模型步数或工具调用上限时返回明确的 `incomplete` 状态。
 
 ## 范围内
 
 - 唯一用户入口是交互式 CLI REPL。
 - 支持 `/help`、`/new`、`/exit`，支持本进程内多轮上下文。
 - 支持 Markdown 导入、文档 ID/日期、检索片段和按 ID 读文档。
-- 保留 BM25 基础检索，可尝试向量召回、RRF 融合和 BGE 重排。
-- DeepSeek 使用 OpenAI 兼容 Chat Completions 与 function calling。
+- 保留 BM25 基础检索，可启用向量召回、RRF 融合和可切换的候选重排（BGE embedding 相似度或兼容 rerank API）；重排 backend 通过统一接口扩展。
+- DeepSeek 使用 OpenAI 兼容 Chat Completions 与 function calling；Anthropic 协议可选使用 Messages API 与工具调用。
 - 展示回答、引用、资料缺口、状态和工具 Trace。
 - 提供合成资料、自动化测试和示例运行记录。
 
@@ -55,6 +57,8 @@
 | A5 上下文追问 | 当前问题省略前轮对象 | 上下文传给模型，检索 query 能补全指代；事实仍需证据 | 上下文测试、`examples/01-normal-context.json` |
 | A6 工具失败 | 检索或读取异常 | `tool_error`、Trace 记录失败、不给出基于不完整资料的确定答案 | 工具失败测试、`examples/03-gaps-and-failure.json` |
 | A7 资料替换 | 将 D01 数字从 30 改为 20 | 新结果中的答案和原文引用跟着变化；冲突是否仍存在取决于 D02 | `mutation_check`，但当前仅验证 Agent 看到变化后的工具证据时会传播新证据 |
+| A8 动态决策记录 | 不同问题/检索结果 | 真实模型依据观察结果继续搜索、读取原文或结束；Trace 记录动作和结果摘要 | `examples/05-live-anthropic-success.json`、`examples/08-live-qwen-reranker.json`、`examples/09-live-product-question.json` |
+| A9 执行上限 | 模型持续请求工具或一条响应并行请求多个工具 | 6 轮模型请求或 8 次工具调用后停止，状态为 `incomplete` | `tests/test_qa_agent.py` 的轮数及工具次数上限测试 |
 
 ## 可检查的不变量
 
@@ -66,4 +70,4 @@
 
 ## 成功标准的边界
 
-满足一条编排测试，只说明被测代码路径在给定替身输入下符合预期；不能证明真实 DeepSeek 每次都选对工具，也不能证明真实检索找到了应该找到的所有文档。完整评审还需要配置真实 API Key，启动 CLI、使用合成语料做端到端测试，并检查真实模型 Trace。当前真实模型结果未提交，详见 [03-evaluation.md](03-evaluation.md)。
+满足一条编排测试，只说明被测代码路径在给定替身输入下符合预期；不能证明真实模型每次都选对工具，也不能证明真实检索找到了应该找到的所有文档。真实运行 Trace 说明具体日期的一次模型确实选了什么工具，但不能证明长期稳定性。当前已提交 Anthropic-compatible 模型的冲突成功记录和新版 Trace 运行记录；本次新增 Trace 中也记录了真实模型结构化输出失败，详见 [03-evaluation.md](03-evaluation.md)。

@@ -1,0 +1,39 @@
+{
+  "run_mode": "live_embedding_api_and_local_index",
+  "date": "2026-10-30",
+  "provider_protocol": "OpenAI-compatible Embeddings API",
+  "model": "text-embedding-bge-large-en-v1.5",
+  "input_validation": {
+    "text_count": 2,
+    "returned_vector_count": 2,
+    "dimensions": 1024,
+    "all_values_finite": true,
+    "indexes": [0, 1]
+  },
+  "index_validation": {
+    "embedded_chunk_count": 5381,
+    "matrix_shape": [5381, 1024],
+    "oversize_input_handling": "400-character windows with 50-character overlap; window vectors averaged per source chunk",
+    "hybrid_query": "报销期限多久",
+    "retrieval_method": "BM25 + vector recall + RRF; reranker unavailable",
+    "result_count": 5,
+    "top_matches": [
+      {
+        "rank": 1,
+        "doc_id": "D02",
+        "score": 0.0315
+      },
+      {
+        "rank": 2,
+        "doc_id": "D01",
+        "score": 0.0315
+      }
+    ]
+  },
+  "notes": [
+    "The initial full-index request was rejected because one input exceeded the service's 512-token context limit.",
+    "After adding sliding windows, the project VectorIndex embedded all 5381 imported chunks and the hybrid search returned D02 and D01 as its top two matches.",
+    "The local BGE reranker could not be loaded because downloading its ONNX model ended with an SSL EOF; results in this run were not reranked.",
+    "The endpoint API key and document text are intentionally omitted from this trace."
+  ]
+}

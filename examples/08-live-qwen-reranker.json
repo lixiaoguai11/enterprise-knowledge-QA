@@ -1,0 +1,353 @@
+{
+  "run_mode": "live_end_to_end_conflict_and_reranking",
+  "date": "2026-10-30",
+  "llm_provider": "anthropic",
+  "llm_model": "deepseek-flash",
+  "embedding_model": "text-embedding-bge-large-en-v1.5",
+  "reranker_provider": "qwen_api",
+  "input": "报销期限多久？",
+  "retrieval": {
+    "error": null,
+    "embedding_dimensions": 1024,
+    "ranked_candidates": [
+      {
+        "rank": 1,
+        "doc_id": "D03",
+        "score": 0.848251,
+        "rerank_score": 0.6360220313072205
+      },
+      {
+        "rank": 2,
+        "doc_id": "YQ-INST-022",
+        "score": 0.764929,
+        "rerank_score": 0.6427170634269714
+      },
+      {
+        "rank": 3,
+        "doc_id": "D02",
+        "score": 0.69,
+        "rerank_score": 0.3418419361114502
+      },
+      {
+        "rank": 4,
+        "doc_id": "D01",
+        "score": 0.677421,
+        "rerank_score": 0.3251497745513916
+      },
+      {
+        "rank": 5,
+        "doc_id": "YQ-PROD-008",
+        "score": 0.661492,
+        "rerank_score": 0.41247016191482544
+      },
+      {
+        "rank": 6,
+        "doc_id": "YQ-INST-013",
+        "score": 0.5,
+        "rerank_score": 0.7840608954429626
+      },
+      {
+        "rank": 7,
+        "doc_id": "D03",
+        "score": 0.459589,
+        "rerank_score": 0.0708046406507492
+      },
+      {
+        "rank": 8,
+        "doc_id": "YQ-INST-003",
+        "score": 0.437143,
+        "rerank_score": 0.21188876032829285
+      },
+      {
+        "rank": 9,
+        "doc_id": "YQ-INST-003",
+        "score": 0.420273,
+        "rerank_score": 0.6001999974250793
+      },
+      {
+        "rank": 10,
+        "doc_id": "YQ-TECH-LANGCHAIN-012",
+        "score": 0.412339,
+        "rerank_score": 0.6429735422134399
+      }
+    ],
+    "both_conflicting_documents_retrieved": true
+  },
+  "result": {
+    "answer": "检索到互相矛盾的资料：D01（版本 2026-01-10）：‘报销期限\n员工应在费用发生后 30 天内提交报销申请。该制度没有说明适用部门，也没有说明与其他报销制度冲突时的优先级。’；D02（版本 2026-02-01）：‘报销期限\n员工应在费用发生后 15 天内提交报销申请。该规则没有说明适用部门，也没有说明与其他报销制度冲突时的优先级。’。现有资料未能确定适用范围或优先级，请确认应按哪项制度处理。",
+    "citations": [
+      {
+        "doc_id": "D01",
+        "title": "报销制度 D01",
+        "version_date": "2026-01-10",
+        "quote": "报销期限\n员工应在费用发生后 30 天内提交报销申请。该制度没有说明适用部门，也没有说明与其他报销制度冲突时的优先级。"
+      },
+      {
+        "doc_id": "D02",
+        "title": "报销规则 D02",
+        "version_date": "2026-02-01",
+        "quote": "报销期限\n员工应在费用发生后 15 天内提交报销申请。该规则没有说明适用部门，也没有说明与其他报销制度冲突时的优先级。"
+      }
+    ],
+    "gaps": [
+      "缺少能够判定冲突资料适用范围或优先级的信息"
+    ],
+    "status": "needs_clarification",
+    "trace": [
+      {
+        "action": "model_tool_choice",
+        "tool": "search_documents",
+        "arguments": {
+          "query": "报销期限 报销时限",
+          "top_k": 10
+        },
+        "decision_basis": "根据当前问题，模型选择先从知识库获取证据。",
+        "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。"
+      },
+      {
+        "action": "search_documents",
+        "arguments": {
+          "query": "报销期限 报销时限",
+          "top_k": 10
+        },
+        "result_count": 10,
+        "result_summary": {
+          "count": 10,
+          "documents": [
+            {
+              "doc_id": "D03",
+              "title": "报销流程 FAQ",
+              "version_date": "2026-03-01",
+              "quote_preview": "# 报销流程 FAQ"
+            },
+            {
+              "doc_id": "YQ-TECH-POSTGRESQL-010",
+              "title": "technical/postgresql/ddl-partitioning.md",
+              "version_date": "2026-08-18",
+              "quote_preview": "."
+            },
+            {
+              "doc_id": "D01",
+              "title": "报销制度 D01",
+              "version_date": "2026-01-10",
+              "quote_preview": "# 报销制度 D01"
+            },
+            {
+              "doc_id": "D02",
+              "title": "报销规则 D02",
+              "version_date": "2026-02-01",
+              "quote_preview": "# 报销规则 D02"
+            },
+            {
+              "doc_id": "YQ-INST-003",
+              "title": "差旅报销管理规定",
+              "version_date": "2026-08-18",
+              "quote_preview": "# 差旅报销管理规定\n\n> 文档编号：YQ-INST-003\n> 版本：v1.4\n> 生效日期：2026-08-18\n> 责任人：财务部\n> 权限级别：全员"
+            },
+            {
+              "doc_id": "D03",
+              "title": "报销流程 FAQ",
+              "version_date": "2026-03-01",
+              "quote_preview": "如何提交报销\n员工在费用系统创建报销单，填写费用发生日期、金额和用途，并上传发票及付款凭证。提交前核对部门和成本中心。审批完成后可在费用系统查看处理状态。"
+            },
+            {
+              "doc_id": "D01",
+              "title": "报销制度 D01",
+              "version_date": "2026-01-10",
+              "quote_preview": "报销期限\n员工应在费用发生后 30 天内提交报销申请。该制度没有说明适用部门，也没有说明与其他报销制度冲突时的优先级。"
+            },
+            {
+              "doc_id": "D02",
+              "title": "报销规则 D02",
+              "version_date": "2026-02-01",
+              "quote_preview": "报销期限\n员工应在费用发生后 15 天内提交报销申请。该规则没有说明适用部门，也没有说明与其他报销制度冲突时的优先级。"
+            },
+            {
+              "doc_id": "YQ-INST-003",
+              "title": "差旅报销管理规定",
+              "version_date": "2026-08-18",
+              "quote_preview": "4. 报销流程\n出差结束后 10 个工作日内提交报销单，附行程单、发票和审批记录。\n\n报销单先由部门负责人确认业务真实性，再由财务部审核票据合规性。\n\n财务审核通过后，款项于 7 个工作日内发放至员工工资卡。"
+            },
+            {
+              "doc_id": "YQ-INST-001",
+              "title": "员工考勤管理制度",
+              "version_date": "2026-08-18",
+              "quote_preview": "2. 工作时间\n标准工作时间为周一至周五 9:00 至 18:00，午休 12:00 至 13:00，每天有效工作 8 小时。\n\n实行弹性工时的岗位，需由部门负责人书面确认，并在当月出勤记录中说明。\n\n远程办公日须保持企业 IM、邮件和电话可联系，工作时间安排需提前报部门负责人备案。\n\n| 事项 | 标准 |\n| --- | --- |\n| 标准班次 | 9:00-18:00 |\n| 午休 | 12:00-13:00 |\n| 打卡方式 | 企业微信或考勤机 |\n| 补卡次数 "
+            }
+          ]
+        }
+      },
+      {
+        "action": "model_tool_choice",
+        "tool": "read_document",
+        "arguments": {
+          "doc_id": "D01"
+        },
+        "decision_basis": "上次检索返回 10 条候选片段，模型选择读取 D01 原文核对上下文。",
+        "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。"
+      },
+      {
+        "action": "read_document",
+        "arguments": {
+          "doc_id": "D01"
+        },
+        "result_count": 2,
+        "result_summary": {
+          "doc_id": "D01",
+          "section_count": 2,
+          "sections": [
+            {
+              "heading": "文档说明",
+              "quote_preview": "# 报销制度 D01"
+            },
+            {
+              "heading": "报销期限",
+              "quote_preview": "报销期限\n员工应在费用发生后 30 天内提交报销申请。该制度没有说明适用部门，也没有说明与其他报销制度冲突时的优先级。"
+            }
+          ]
+        }
+      },
+      {
+        "action": "model_tool_choice",
+        "tool": "read_document",
+        "arguments": {
+          "doc_id": "D02"
+        },
+        "decision_basis": "读取 D01 原文后，模型选择再核验 D02。",
+        "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。"
+      },
+      {
+        "action": "read_document",
+        "arguments": {
+          "doc_id": "D02"
+        },
+        "result_count": 2,
+        "result_summary": {
+          "doc_id": "D02",
+          "section_count": 2,
+          "sections": [
+            {
+              "heading": "文档说明",
+              "quote_preview": "# 报销规则 D02"
+            },
+            {
+              "heading": "报销期限",
+              "quote_preview": "报销期限\n员工应在费用发生后 15 天内提交报销申请。该规则没有说明适用部门，也没有说明与其他报销制度冲突时的优先级。"
+            }
+          ]
+        }
+      },
+      {
+        "action": "model_tool_choice",
+        "tool": "read_document",
+        "arguments": {
+          "doc_id": "YQ-INST-003"
+        },
+        "decision_basis": "读取 D02 原文后，模型选择再核验 YQ-INST-003。",
+        "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。"
+      },
+      {
+        "action": "read_document",
+        "arguments": {
+          "doc_id": "YQ-INST-003"
+        },
+        "result_count": 8,
+        "result_summary": {
+          "doc_id": "YQ-INST-003",
+          "section_count": 8,
+          "sections": [
+            {
+              "heading": "文档说明",
+              "quote_preview": "# 差旅报销管理规定\n\n> 文档编号：YQ-INST-003\n> 版本：v1.4\n> 生效日期：2026-08-18\n> 责任人：财务部\n> 权限级别：全员"
+            },
+            {
+              "heading": "1. 文档说明",
+              "quote_preview": "1. 文档说明\n本规定规范差旅申请、费用标准、报销流程和发票要求，保证差旅支出真实、合规、可控。"
+            },
+            {
+              "heading": "2. 差旅申请",
+              "quote_preview": "2. 差旅申请\n出差前应在 OA 系统提交出差申请，注明目的地、事由、行程和预算。\n\n出差申请获批后，方可预订交通和酒店；未经审批产生的费用原则上不予报销。"
+            },
+            {
+              "heading": "3. 费用标准",
+              "quote_preview": "3. 费用标准\n| 城市类型 | 住宿标准（元/晚） | 市内交通（元/天） | 餐补（元/天） |\n| --- | --- | --- | --- |\n| 一线城市 | 500 | 100 | 150 |\n| 省会城市 | 400 | 80 | 120 |\n| 其他城市 | 300 | 60 | 100 |\n\n同性别两人同行应合住一间，特殊情况需说明。\n\n高铁二等座、飞机经济舱为默认标准，超出部分由员工自行承担，特殊情况经分管领导审批。"
+            },
+            {
+              "heading": "4. 报销流程",
+              "quote_preview": "4. 报销流程\n出差结束后 10 个工作日内提交报销单，附行程单、发票和审批记录。\n\n报销单先由部门负责人确认业务真实性，再由财务部审核票据合规性。\n\n财务审核通过后，款项于 7 个工作日内发放至员工工资卡。"
+            },
+            {
+              "heading": "5. 发票要求",
+              "quote_preview": "5. 发票要求\n发票抬头应为公司全称和统一社会信用代码，开具内容与出差事项一致。\n\n电子发票需提供电子文件，纸质发票需保存原件，丢失不补报。\n\n虚开发票、重复报销等行为按员工行为规范严肃处理。"
+            },
+            {
+              "heading": "6. 特殊情况",
+              "quote_preview": "6. 特殊情况\n客户承担费用的部分不得重复报销，报销单备注栏应注明。\n\n因公邀请外部人员产生的费用，需在报销单中列明人员身份。"
+            },
+            {
+              "heading": "附则",
+              "quote_preview": "附则\n1. 本制度由财务部负责解释和修订，自发布之日起施行。\n2. 本制度为模拟文档，仅用于知识库问答系统的学习演示，不代表任何真实企业的管理规定。\n3. 如遇法律法规或公司经营情况变化，由相关责任部门提出修订，经审批后发布新版本。"
+            }
+          ]
+        }
+      },
+      {
+        "action": "model_tool_choice",
+        "tool": "read_document",
+        "arguments": {
+          "doc_id": "D03"
+        },
+        "decision_basis": "读取 YQ-INST-003 原文后，模型选择再核验 D03。",
+        "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。"
+      },
+      {
+        "action": "read_document",
+        "arguments": {
+          "doc_id": "D03"
+        },
+        "result_count": 3,
+        "result_summary": {
+          "doc_id": "D03",
+          "section_count": 3,
+          "sections": [
+            {
+              "heading": "文档说明",
+              "quote_preview": "# 报销流程 FAQ"
+            },
+            {
+              "heading": "如何提交报销",
+              "quote_preview": "如何提交报销\n员工在费用系统创建报销单，填写费用发生日期、金额和用途，并上传发票及付款凭证。提交前核对部门和成本中心。审批完成后可在费用系统查看处理状态。"
+            },
+            {
+              "heading": "产品问题反馈",
+              "quote_preview": "产品问题反馈\n云启费用系统目前没有离线提交功能。网络不可用时，员工应保存票据，待网络恢复后在线提交。"
+            }
+          ]
+        }
+      },
+      {
+        "action": "model_final",
+        "decision_basis": "模型本轮未请求更多工具，返回最终结构化结果。"
+      },
+      {
+        "action": "conflict_guard",
+        "conflicts_found": 1
+      }
+    ],
+    "tools_used": [
+      "search_documents",
+      "read_document",
+      "read_document",
+      "read_document",
+      "read_document"
+    ],
+    "rounds": 4
+  },
+  "assertions": {
+    "live_reranking_ran": true,
+    "both_conflicting_documents_retrieved": true,
+    "status_needs_clarification": true,
+    "both_conflicting_documents_cited": true,
+    "search_and_read_tools_used": true
+  }
+}

@@ -1,6 +1,6 @@
 {
   "run_mode": "脚本化模型和知识工具响应；真实 QA Agent 编排代码；不代表 DeepSeek 实际推理或检索质量",
-  "generated_at": "2026-10-28",
+  "generated_at": "2026-10-30",
   "scenarios": [
     {
       "input": "报销时要上传什么？",
@@ -19,11 +19,35 @@
         "status": "answered",
         "trace": [
           {
+            "action": "model_tool_choice",
+            "tool": "search_documents",
+            "arguments": {
+              "query": "报销要上传什么"
+            },
+            "decision_basis": "根据当前问题，模型选择先从知识库获取证据。",
+            "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。"
+          },
+          {
             "action": "search_documents",
             "arguments": {
               "query": "报销要上传什么"
             },
-            "result_count": 1
+            "result_count": 1,
+            "result_summary": {
+              "count": 1,
+              "documents": [
+                {
+                  "doc_id": "D03",
+                  "title": "报销流程 FAQ",
+                  "version_date": "2026-03-01",
+                  "quote_preview": "员工在费用系统创建报销单，并上传发票及付款凭证。"
+                }
+              ]
+            }
+          },
+          {
+            "action": "model_final",
+            "decision_basis": "模型本轮未请求更多工具，返回最终结构化结果。"
           }
         ],
         "tools_used": [
@@ -31,7 +55,7 @@
         ],
         "rounds": 2
       },
-      "cli_output": "\n答案：提交报销时上传发票及付款凭证。\n状态：answered\n引用：\n  - D03 | 报销流程 FAQ | 版本 2026-03-01\n    原文：员工在费用系统创建报销单，并上传发票及付款凭证。\n资料缺口：\n  - 无\n工具 Trace：\n  - {\"action\": \"search_documents\", \"arguments\": {\"query\": \"报销要上传什么\"}, \"result_count\": 1}\n"
+      "cli_output": "\n答案：提交报销时上传发票及付款凭证。\n状态：answered\n引用：\n  - D03 | 报销流程 FAQ | 版本 2026-03-01\n    原文：员工在费用系统创建报销单，并上传发票及付款凭证。\n资料缺口：\n  - 无\n工具 Trace：\n  - {\"action\": \"model_tool_choice\", \"tool\": \"search_documents\", \"arguments\": {\"query\": \"报销要上传什么\"}, \"decision_basis\": \"根据当前问题，模型选择先从知识库获取证据。\", \"note\": \"基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。\"}\n  - {\"action\": \"search_documents\", \"arguments\": {\"query\": \"报销要上传什么\"}, \"result_count\": 1, \"result_summary\": {\"count\": 1, \"documents\": [{\"doc_id\": \"D03\", \"title\": \"报销流程 FAQ\", \"version_date\": \"2026-03-01\", \"quote_preview\": \"员工在费用系统创建报销单，并上传发票及付款凭证。\"}]}}\n  - {\"action\": \"model_final\", \"decision_basis\": \"模型本轮未请求更多工具，返回最终结构化结果。\"}\n"
     },
     {
       "input": "断网了，票据之后怎么交？",
@@ -50,11 +74,35 @@
         "status": "answered",
         "trace": [
           {
+            "action": "model_tool_choice",
+            "tool": "search_documents",
+            "arguments": {
+              "query": "没有网络时如何补交报销票据"
+            },
+            "decision_basis": "根据当前问题，模型选择先从知识库获取证据。",
+            "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。"
+          },
+          {
             "action": "search_documents",
             "arguments": {
               "query": "没有网络时如何补交报销票据"
             },
-            "result_count": 1
+            "result_count": 1,
+            "result_summary": {
+              "count": 1,
+              "documents": [
+                {
+                  "doc_id": "D03",
+                  "title": "报销流程 FAQ",
+                  "version_date": "2026-03-01",
+                  "quote_preview": "网络恢复后在线提交。"
+                }
+              ]
+            }
+          },
+          {
+            "action": "model_final",
+            "decision_basis": "模型本轮未请求更多工具，返回最终结构化结果。"
           }
         ],
         "tools_used": [
@@ -62,7 +110,7 @@
         ],
         "rounds": 2
       },
-      "cli_output": "\n答案：网络恢复后在线提交。\n状态：answered\n引用：\n  - D03 | 报销流程 FAQ | 版本 2026-03-01\n    原文：网络恢复后在线提交。\n资料缺口：\n  - 无\n工具 Trace：\n  - {\"action\": \"search_documents\", \"arguments\": {\"query\": \"没有网络时如何补交报销票据\"}, \"result_count\": 1}\n"
+      "cli_output": "\n答案：网络恢复后在线提交。\n状态：answered\n引用：\n  - D03 | 报销流程 FAQ | 版本 2026-03-01\n    原文：网络恢复后在线提交。\n资料缺口：\n  - 无\n工具 Trace：\n  - {\"action\": \"model_tool_choice\", \"tool\": \"search_documents\", \"arguments\": {\"query\": \"没有网络时如何补交报销票据\"}, \"decision_basis\": \"根据当前问题，模型选择先从知识库获取证据。\", \"note\": \"基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。\"}\n  - {\"action\": \"search_documents\", \"arguments\": {\"query\": \"没有网络时如何补交报销票据\"}, \"result_count\": 1, \"result_summary\": {\"count\": 1, \"documents\": [{\"doc_id\": \"D03\", \"title\": \"报销流程 FAQ\", \"version_date\": \"2026-03-01\", \"quote_preview\": \"网络恢复后在线提交。\"}]}}\n  - {\"action\": \"model_final\", \"decision_basis\": \"模型本轮未请求更多工具，返回最终结构化结果。\"}\n"
     },
     {
       "input": "提交前还要核对什么？",
@@ -90,11 +138,35 @@
         "status": "answered",
         "trace": [
           {
+            "action": "model_tool_choice",
+            "tool": "search_documents",
+            "arguments": {
+              "query": "报销提交前核对什么"
+            },
+            "decision_basis": "根据当前问题，模型选择先从知识库获取证据。",
+            "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。"
+          },
+          {
             "action": "search_documents",
             "arguments": {
               "query": "报销提交前核对什么"
             },
-            "result_count": 1
+            "result_count": 1,
+            "result_summary": {
+              "count": 1,
+              "documents": [
+                {
+                  "doc_id": "D03",
+                  "title": "报销流程 FAQ",
+                  "version_date": "2026-03-01",
+                  "quote_preview": "提交前核对部门和成本中心。"
+                }
+              ]
+            }
+          },
+          {
+            "action": "model_final",
+            "decision_basis": "模型本轮未请求更多工具，返回最终结构化结果。"
           }
         ],
         "tools_used": [
@@ -102,7 +174,7 @@
         ],
         "rounds": 2
       },
-      "cli_output": "\n答案：提交前核对部门和成本中心。\n状态：answered\n引用：\n  - D03 | 报销流程 FAQ | 版本 2026-03-01\n    原文：提交前核对部门和成本中心。\n资料缺口：\n  - 无\n工具 Trace：\n  - {\"action\": \"search_documents\", \"arguments\": {\"query\": \"报销提交前核对什么\"}, \"result_count\": 1}\n"
+      "cli_output": "\n答案：提交前核对部门和成本中心。\n状态：answered\n引用：\n  - D03 | 报销流程 FAQ | 版本 2026-03-01\n    原文：提交前核对部门和成本中心。\n资料缺口：\n  - 无\n工具 Trace：\n  - {\"action\": \"model_tool_choice\", \"tool\": \"search_documents\", \"arguments\": {\"query\": \"报销提交前核对什么\"}, \"decision_basis\": \"根据当前问题，模型选择先从知识库获取证据。\", \"note\": \"基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。\"}\n  - {\"action\": \"search_documents\", \"arguments\": {\"query\": \"报销提交前核对什么\"}, \"result_count\": 1, \"result_summary\": {\"count\": 1, \"documents\": [{\"doc_id\": \"D03\", \"title\": \"报销流程 FAQ\", \"version_date\": \"2026-03-01\", \"quote_preview\": \"提交前核对部门和成本中心。\"}]}}\n  - {\"action\": \"model_final\", \"decision_basis\": \"模型本轮未请求更多工具，返回最终结构化结果。\"}\n"
     }
   ]
 }

@@ -1,0 +1,446 @@
+{
+  "run_mode": "live_end_to_end_product_question_and_reranking",
+  "date": "2026-10-30",
+  "llm_provider": "anthropic",
+  "llm_model": "deepseek-flash",
+  "embedding_model": "text-embedding-bge-large-en-v1.5",
+  "reranker_provider": "qwen_api",
+  "input": "云启 API 网关支持哪些认证鉴权方式？",
+  "result": {
+    "answer": "模型未返回可验证的结构化结果，本轮未提供知识库答案。",
+    "citations": [],
+    "gaps": [],
+    "status": "tool_error",
+    "trace": [
+      {
+        "action": "model_tool_choice",
+        "tool": "search_documents",
+        "arguments": {
+          "query": "云启 API 网关 认证鉴权方式",
+          "top_k": 10
+        },
+        "decision_basis": "根据当前问题，模型选择先从知识库获取证据。",
+        "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。"
+      },
+      {
+        "action": "search_documents",
+        "arguments": {
+          "query": "云启 API 网关 认证鉴权方式",
+          "top_k": 10
+        },
+        "result_count": 10,
+        "result_summary": {
+          "count": 10,
+          "documents": [
+            {
+              "doc_id": "YQ-PROD-021",
+              "title": "云启 API 网关产品介绍",
+              "version_date": "2026-08-18",
+              "quote_preview": "# 云启 API 网关产品介绍\n\n> 文档编号：YQ-PROD-021\n> 版本：v1.5\n> 生效日期：2026-08-18\n> 责任人：产品部\n> 权限级别：全员"
+            },
+            {
+              "doc_id": "YQ-PROD-025",
+              "title": "云启 API 网关配置示例",
+              "version_date": "2026-08-18",
+              "quote_preview": "1. 文档说明\n本文提供云启 API 网关的典型配置示例，包括路由、JWT 认证、限流和灰度。"
+            },
+            {
+              "doc_id": "YQ-PROD-023",
+              "title": "云启 API 网关 FAQ",
+              "version_date": "2026-08-18",
+              "quote_preview": "1. 文档说明\n本 FAQ 汇总云启 API 网关的常见问题，覆盖性能、限流、安全和高可用。"
+            },
+            {
+              "doc_id": "YQ-PROD-022",
+              "title": "云启 API 网关用户手册",
+              "version_date": "2026-08-18",
+              "quote_preview": "1. 文档说明\n本手册介绍云启 API 网关的路由、认证、限流、插件和监控配置方法。"
+            },
+            {
+              "doc_id": "YQ-PROD-010",
+              "title": "云启数据分析平台集成指南",
+              "version_date": "2026-08-18",
+              "quote_preview": "2. 开放 API\n平台提供 REST API，可查询数据集、创建看板、触发刷新和获取导出任务。\n\nAPI 使用访问令牌认证，令牌可设置有效期和权限范围。"
+            },
+            {
+              "doc_id": "YQ-PROD-024",
+              "title": "云启 API 网关版本发布记录",
+              "version_date": "2026-08-18",
+              "quote_preview": "1. 文档说明\n本文记录云启 API 网关版本更新内容，帮助用户规划升级。"
+            },
+            {
+              "doc_id": "YQ-PROD-021",
+              "title": "云启 API 网关产品介绍",
+              "version_date": "2026-08-18",
+              "quote_preview": "1. 文档说明\n云启 API 网关统一管理企业 API 的接入、认证、限流、转发和监控，帮助团队安全高效地开放服务。"
+            },
+            {
+              "doc_id": "YQ-PROD-003",
+              "title": "云启低代码平台 FAQ",
+              "version_date": "2026-08-18",
+              "quote_preview": "4. 集成与扩展\n问：可以调用企业已有系统的 API 吗？\n\n答：可以，平台提供 HTTP 连接器、Webhook 和脚本节点，可调用 REST API。\n\n问：支持二次开发吗？\n\n答：企业版支持自定义代码包、前端扩展点和开放 API。"
+            },
+            {
+              "doc_id": "YQ-PROD-023",
+              "title": "云启 API 网关 FAQ",
+              "version_date": "2026-08-18",
+              "quote_preview": "# 云启 API 网关 FAQ\n\n> 文档编号：YQ-PROD-023\n> 版本：v1.0\n> 生效日期：2026-08-18\n> 责任人：产品部\n> 权限级别：全员"
+            },
+            {
+              "doc_id": "YQ-PROD-022",
+              "title": "云启 API 网关用户手册",
+              "version_date": "2026-08-18",
+              "quote_preview": "# 云启 API 网关用户手册\n\n> 文档编号：YQ-PROD-022\n> 版本：v1.2\n> 生效日期：2026-08-18\n> 责任人：产品部\n> 权限级别：全员"
+            }
+          ]
+        }
+      },
+      {
+        "action": "model_tool_choice",
+        "tool": "search_documents",
+        "arguments": {
+          "query": "API 网关 支持哪些认证方式",
+          "top_k": 10
+        },
+        "decision_basis": "上次检索返回 10 条候选后，模型选择用新查询继续补充检索。",
+        "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。"
+      },
+      {
+        "action": "search_documents",
+        "arguments": {
+          "query": "API 网关 支持哪些认证方式",
+          "top_k": 10
+        },
+        "result_count": 10,
+        "result_summary": {
+          "count": 10,
+          "documents": [
+            {
+              "doc_id": "YQ-PROD-003",
+              "title": "云启低代码平台 FAQ",
+              "version_date": "2026-08-18",
+              "quote_preview": "4. 集成与扩展\n问：可以调用企业已有系统的 API 吗？\n\n答：可以，平台提供 HTTP 连接器、Webhook 和脚本节点，可调用 REST API。\n\n问：支持二次开发吗？\n\n答：企业版支持自定义代码包、前端扩展点和开放 API。"
+            },
+            {
+              "doc_id": "YQ-PROD-021",
+              "title": "云启 API 网关产品介绍",
+              "version_date": "2026-08-18",
+              "quote_preview": "# 云启 API 网关产品介绍\n\n> 文档编号：YQ-PROD-021\n> 版本：v1.5\n> 生效日期：2026-08-18\n> 责任人：产品部\n> 权限级别：全员"
+            },
+            {
+              "doc_id": "YQ-PROD-023",
+              "title": "云启 API 网关 FAQ",
+              "version_date": "2026-08-18",
+              "quote_preview": "# 云启 API 网关 FAQ\n\n> 文档编号：YQ-PROD-023\n> 版本：v1.0\n> 生效日期：2026-08-18\n> 责任人：产品部\n> 权限级别：全员"
+            },
+            {
+              "doc_id": "YQ-PROD-022",
+              "title": "云启 API 网关用户手册",
+              "version_date": "2026-08-18",
+              "quote_preview": "1. 文档说明\n本手册介绍云启 API 网关的路由、认证、限流、插件和监控配置方法。"
+            },
+            {
+              "doc_id": "YQ-PROD-025",
+              "title": "云启 API 网关配置示例",
+              "version_date": "2026-08-18",
+              "quote_preview": "1. 文档说明\n本文提供云启 API 网关的典型配置示例，包括路由、JWT 认证、限流和灰度。"
+            },
+            {
+              "doc_id": "YQ-PROD-023",
+              "title": "云启 API 网关 FAQ",
+              "version_date": "2026-08-18",
+              "quote_preview": "1. 文档说明\n本 FAQ 汇总云启 API 网关的常见问题，覆盖性能、限流、安全和高可用。"
+            },
+            {
+              "doc_id": "YQ-PROD-010",
+              "title": "云启数据分析平台集成指南",
+              "version_date": "2026-08-18",
+              "quote_preview": "2. 开放 API\n平台提供 REST API，可查询数据集、创建看板、触发刷新和获取导出任务。\n\nAPI 使用访问令牌认证，令牌可设置有效期和权限范围。"
+            },
+            {
+              "doc_id": "YQ-PROD-021",
+              "title": "云启 API 网关产品介绍",
+              "version_date": "2026-08-18",
+              "quote_preview": "1. 文档说明\n云启 API 网关统一管理企业 API 的接入、认证、限流、转发和监控，帮助团队安全高效地开放服务。"
+            },
+            {
+              "doc_id": "YQ-PROD-024",
+              "title": "云启 API 网关版本发布记录",
+              "version_date": "2026-08-18",
+              "quote_preview": "1. 文档说明\n本文记录云启 API 网关版本更新内容，帮助用户规划升级。"
+            },
+            {
+              "doc_id": "YQ-PROD-020",
+              "title": "云启容器平台安全加固指南",
+              "version_date": "2026-08-18",
+              "quote_preview": "5. 审计与监控\n开启 API 审计、容器事件和登录日志，集中存储并设置保留周期。\n\n配置异常行为告警，例如特权容器启动、集群内横向访问和密钥泄露。\n\n每季度开展一次安全基线巡检并输出整改报告。"
+            }
+          ]
+        }
+      },
+      {
+        "action": "model_tool_choice",
+        "tool": "read_document",
+        "arguments": {
+          "doc_id": "YQ-PROD-021"
+        },
+        "decision_basis": "上次检索返回 10 条候选片段，模型选择读取 YQ-PROD-021 原文核对上下文。",
+        "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。"
+      },
+      {
+        "action": "read_document",
+        "arguments": {
+          "doc_id": "YQ-PROD-021"
+        },
+        "result_count": 7,
+        "result_summary": {
+          "doc_id": "YQ-PROD-021",
+          "section_count": 7,
+          "sections": [
+            {
+              "heading": "文档说明",
+              "quote_preview": "# 云启 API 网关产品介绍\n\n> 文档编号：YQ-PROD-021\n> 版本：v1.5\n> 生效日期：2026-08-18\n> 责任人：产品部\n> 权限级别：全员"
+            },
+            {
+              "heading": "1. 文档说明",
+              "quote_preview": "1. 文档说明\n云启 API 网关统一管理企业 API 的接入、认证、限流、转发和监控，帮助团队安全高效地开放服务。"
+            },
+            {
+              "heading": "2. 产品定位",
+              "quote_preview": "2. 产品定位\n网关位于客户端与后端服务之间，提供统一的访问入口。\n\n适合微服务架构、开放平台和对内服务治理场景。"
+            },
+            {
+              "heading": "3. 核心能力",
+              "quote_preview": "3. 核心能力\n- 路由管理：路径、域名、权重和灰度路由。\n\n- 认证鉴权：JWT、OAuth2、API Key、IP 白名单和签名。\n\n- 流量控制：QPS 限流、并发控制和熔断降级。\n\n- 协议转换：HTTP 与 gRPC 互转、WebSocket 代理。\n\n- 观测能力：调用日志、链路追踪、错误告警和报表。"
+            },
+            {
+              "heading": "4. 架构说明",
+              "quote_preview": "4. 架构说明\n控制面管理路由与策略，数据面负责流量转发，支持多环境隔离。\n\n网关节点无状态，可水平扩展；策略变更通过热加载生效。\n\n支持集群部署和跨可用区容灾。"
+            },
+            {
+              "heading": "5. 典型场景",
+              "quote_preview": "5. 典型场景\n开放平台：统一认证、配额管理和开发者门户。\n\n微服务治理：服务发现、灰度、熔断和可观测。\n\n安全防护：防刷、参数校验、敏感数据脱敏。"
+            },
+            {
+              "heading": "附则",
+              "quote_preview": "附则\n1. 本制度由产品部负责解释和修订，自发布之日起施行。\n2. 本制度为模拟文档，仅用于知识库问答系统的学习演示，不代表任何真实企业的管理规定。\n3. 如遇法律法规或公司经营情况变化，由相关责任部门提出修订，经审批后发布新版本。"
+            }
+          ]
+        }
+      },
+      {
+        "action": "model_tool_choice",
+        "tool": "read_document",
+        "arguments": {
+          "doc_id": "YQ-PROD-022"
+        },
+        "decision_basis": "读取 YQ-PROD-021 原文后，模型选择再核验 YQ-PROD-022。",
+        "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。"
+      },
+      {
+        "action": "read_document",
+        "arguments": {
+          "doc_id": "YQ-PROD-022"
+        },
+        "result_count": 7,
+        "result_summary": {
+          "doc_id": "YQ-PROD-022",
+          "section_count": 7,
+          "sections": [
+            {
+              "heading": "文档说明",
+              "quote_preview": "# 云启 API 网关用户手册\n\n> 文档编号：YQ-PROD-022\n> 版本：v1.2\n> 生效日期：2026-08-18\n> 责任人：产品部\n> 权限级别：全员"
+            },
+            {
+              "heading": "1. 文档说明",
+              "quote_preview": "1. 文档说明\n本手册介绍云启 API 网关的路由、认证、限流、插件和监控配置方法。"
+            },
+            {
+              "heading": "2. 创建服务与路由",
+              "quote_preview": "2. 创建服务与路由\n在网关控制台创建上游服务，配置协议、负载均衡和目标地址。\n\n创建路由时绑定服务，设置路径、方法、域名和优先级。\n\n灰度路由按 Header、Cookie 或流量比例分发。"
+            },
+            {
+              "heading": "3. 认证配置",
+              "quote_preview": "3. 认证配置\n全局或按路由启用认证插件，支持 JWT、API Key、OAuth2。\n\n开放平台可创建应用并分配 API Key，设置配额和有效期。\n\n密钥泄露时可在控制台立即吊销并重新生成。"
+            },
+            {
+              "heading": "4. 限流与熔断",
+              "quote_preview": "4. 限流与熔断\n限流策略支持按路由、消费者或客户端 IP 配置 QPS 和并发。\n\n熔断策略设置错误率阈值、熔断持续时间和恢复窗口。\n\n限流超限返回 429，并附带重试时间提示。"
+            },
+            {
+              "heading": "5. 插件与观测",
+              "quote_preview": "5. 插件与观测\n插件按请求流程分为认证、转换、安全和观测类型，可在控制台启用和排序。\n\n网关提供调用统计、Top 接口、延迟分布和错误日志。\n\n链路追踪可对接 Jaeger 等系统。"
+            },
+            {
+              "heading": "附则",
+              "quote_preview": "附则\n1. 本制度由产品部负责解释和修订，自发布之日起施行。\n2. 本制度为模拟文档，仅用于知识库问答系统的学习演示，不代表任何真实企业的管理规定。\n3. 如遇法律法规或公司经营情况变化，由相关责任部门提出修订，经审批后发布新版本。"
+            }
+          ]
+        }
+      },
+      {
+        "action": "model_tool_choice",
+        "tool": "read_document",
+        "arguments": {
+          "doc_id": "YQ-PROD-023"
+        },
+        "decision_basis": "读取 YQ-PROD-022 原文后，模型选择再核验 YQ-PROD-023。",
+        "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。"
+      },
+      {
+        "action": "read_document",
+        "arguments": {
+          "doc_id": "YQ-PROD-023"
+        },
+        "result_count": 6,
+        "result_summary": {
+          "doc_id": "YQ-PROD-023",
+          "section_count": 6,
+          "sections": [
+            {
+              "heading": "文档说明",
+              "quote_preview": "# 云启 API 网关 FAQ\n\n> 文档编号：YQ-PROD-023\n> 版本：v1.0\n> 生效日期：2026-08-18\n> 责任人：产品部\n> 权限级别：全员"
+            },
+            {
+              "heading": "1. 文档说明",
+              "quote_preview": "1. 文档说明\n本 FAQ 汇总云启 API 网关的常见问题，覆盖性能、限流、安全和高可用。"
+            },
+            {
+              "heading": "2. 性能问题",
+              "quote_preview": "2. 性能问题\n问：网关会增加多少延迟？\n\n答：默认配置下 P99 新增延迟通常小于 5ms，实际与机器规格、插件数量有关。\n\n问：如何提升网关吞吐？\n\n答：增加网关节点、使用长连接、减少阻塞插件并合理配置连接池。"
+            },
+            {
+              "heading": "3. 限流问题",
+              "quote_preview": "3. 限流问题\n问：限流是按单节点还是集群统计？\n\n答：默认单节点统计，集群限流可启用分布式限流组件。\n\n问：被限流后请求如何处理？\n\n答：返回 429 和 Retry-After 头，客户端应做退避重试。"
+            },
+            {
+              "heading": "4. 安全与高可用",
+              "quote_preview": "4. 安全与高可用\n问：如何防止恶意调用？\n\n答：启用认证、IP 黑名单、动态限流和签名校验，并接入 WAF。\n\n问：网关节点故障是否影响业务？\n\n答：多节点部署下负载均衡会自动摘除故障节点，控制面变更不受影响。"
+            },
+            {
+              "heading": "附则",
+              "quote_preview": "附则\n1. 本制度由产品部负责解释和修订，自发布之日起施行。\n2. 本制度为模拟文档，仅用于知识库问答系统的学习演示，不代表任何真实企业的管理规定。\n3. 如遇法律法规或公司经营情况变化，由相关责任部门提出修订，经审批后发布新版本。"
+            }
+          ]
+        }
+      },
+      {
+        "action": "model_tool_choice",
+        "tool": "read_document",
+        "arguments": {
+          "doc_id": "YQ-PROD-025"
+        },
+        "decision_basis": "读取 YQ-PROD-023 原文后，模型选择再核验 YQ-PROD-025。",
+        "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。"
+      },
+      {
+        "action": "read_document",
+        "arguments": {
+          "doc_id": "YQ-PROD-025"
+        },
+        "result_count": 7,
+        "result_summary": {
+          "doc_id": "YQ-PROD-025",
+          "section_count": 7,
+          "sections": [
+            {
+              "heading": "文档说明",
+              "quote_preview": "# 云启 API 网关配置示例\n\n> 文档编号：YQ-PROD-025\n> 版本：v1.1\n> 生效日期：2026-08-18\n> 责任人：技术支持部\n> 权限级别：管理员"
+            },
+            {
+              "heading": "1. 文档说明",
+              "quote_preview": "1. 文档说明\n本文提供云启 API 网关的典型配置示例，包括路由、JWT 认证、限流和灰度。"
+            },
+            {
+              "heading": "2. 基础路由",
+              "quote_preview": "2. 基础路由\n以下配置将 /api/v1/orders 转发到订单服务，并启用 JWT 认证。\n\n```yaml\n\nroutes:\n\n  - name: order-api\n\n    methods: [GET, POST]\n\n    paths: ['/api/v1/orders/*']\n\n    upstream: order-service:8080\n\n    auth: jwt\n\n```"
+            },
+            {
+              "heading": "3. JWT 认证",
+              "quote_preview": "3. JWT 认证\n在认证插件中配置签发者、公钥或 JWKS 地址。\n\n验证签名和过期时间，可选校验 audience。\n\n认证失败返回 401，缺少权限返回 403。"
+            },
+            {
+              "heading": "4. 限流配置",
+              "quote_preview": "4. 限流配置\n按消费者限流示例：每个应用每秒 50 次，突发 100 次。\n\n```yaml\n\nrate_limit:\n\n  scope: consumer\n\n  qps: 50\n\n  burst: 100\n\n```\n\n限流响应统一格式，便于客户端处理。"
+            },
+            {
+              "heading": "5. 灰度发布",
+              "quote_preview": "5. 灰度发布\n按请求头分流：包含 canary: true 的请求进入新版本服务。\n\n```yaml\n\ncanary:\n\n  match:\n\n    header: canary\n\n    value: 'true'\n\n  upstream: order-service-canary:8080\n\n```\n\n灰度流量应配置独立监控指标，观察错误率和延迟。"
+            },
+            {
+              "heading": "附则",
+              "quote_preview": "附则\n1. 本制度由技术支持部负责解释和修订，自发布之日起施行。\n2. 本制度为模拟文档，仅用于知识库问答系统的学习演示，不代表任何真实企业的管理规定。\n3. 如遇法律法规或公司经营情况变化，由相关责任部门提出修订，经审批后发布新版本。"
+            }
+          ]
+        }
+      },
+      {
+        "action": "model_tool_choice",
+        "tool": "read_document",
+        "arguments": {
+          "doc_id": "YQ-PROD-024"
+        },
+        "decision_basis": "读取 YQ-PROD-025 原文后，模型选择再核验 YQ-PROD-024。",
+        "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。"
+      },
+      {
+        "action": "read_document",
+        "arguments": {
+          "doc_id": "YQ-PROD-024"
+        },
+        "result_count": 6,
+        "result_summary": {
+          "doc_id": "YQ-PROD-024",
+          "section_count": 6,
+          "sections": [
+            {
+              "heading": "文档说明",
+              "quote_preview": "# 云启 API 网关版本发布记录\n\n> 文档编号：YQ-PROD-024\n> 版本：v1.0\n> 生效日期：2026-08-18\n> 责任人：产品部\n> 权限级别：全员"
+            },
+            {
+              "heading": "1. 文档说明",
+              "quote_preview": "1. 文档说明\n本文记录云启 API 网关版本更新内容，帮助用户规划升级。"
+            },
+            {
+              "heading": "2. v2.8（2026-05-08）",
+              "quote_preview": "2. v2.8（2026-05-08）\n- 新增分布式限流和配额管理。\n\n- 新增 gRPC 转 REST 能力。\n\n- 优化控制台配置变更的生效速度。"
+            },
+            {
+              "heading": "3. v2.7（2026-03-05）",
+              "quote_preview": "3. v2.7（2026-03-05）\n- 新增开发者门户和 API 文档自动生成。\n\n- 新增多环境一键同步路由配置。\n\n- 修复特定证书下 TLS 握手失败问题。"
+            },
+            {
+              "heading": "4. v2.6（2026-01-10）",
+              "quote_preview": "4. v2.6（2026-01-10）\n- 支持 Kubernetes Ingress 模式。\n\n- 新增请求响应体脱敏插件。\n\n- 新增按消费者维度的调用报表。"
+            },
+            {
+              "heading": "附则",
+              "quote_preview": "附则\n1. 本制度由产品部负责解释和修订，自发布之日起施行。\n2. 本制度为模拟文档，仅用于知识库问答系统的学习演示，不代表任何真实企业的管理规定。\n3. 如遇法律法规或公司经营情况变化，由相关责任部门提出修订，经审批后发布新版本。"
+            }
+          ]
+        }
+      },
+      {
+        "action": "model_final",
+        "decision_basis": "模型本轮未请求更多工具，返回最终结构化结果。"
+      }
+    ],
+    "tools_used": [
+      "search_documents",
+      "search_documents",
+      "read_document",
+      "read_document",
+      "read_document",
+      "read_document",
+      "read_document"
+    ],
+    "rounds": 4
+  },
+  "assertions": {
+    "status_answered": false,
+    "has_citation": false,
+    "search_tool_used": true,
+    "model_selected_final_action": true
+  },
+  "trace_note": "本记录展示明确资料问题的真实模型工具选择、观察摘要和结束动作；decision_basis 是可观察动作摘要，不是模型内部思维过程。"
+}

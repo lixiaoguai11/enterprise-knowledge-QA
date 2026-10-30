@@ -1,0 +1,96 @@
+{
+  "run_mode": "live_end_to_end_conflict_and_reranking",
+  "date": "2026-10-30",
+  "llm_provider": "anthropic",
+  "llm_model": "deepseek-flash",
+  "embedding_model": "text-embedding-bge-large-en-v1.5",
+  "reranker_provider": "bge_similarity",
+  "input": "报销期限多久？",
+  "retrieval": {
+    "embedding_dimensions": 1024,
+    "ranked_candidates": [
+      {
+        "rank": 1,
+        "doc_id": "D02",
+        "score": 1.0,
+        "rerank_score": 0.7138885855674744
+      },
+      {
+        "rank": 2,
+        "doc_id": "D01",
+        "score": 0.897328,
+        "rerank_score": 0.6793227791786194
+      },
+      {
+        "rank": 3,
+        "doc_id": "D03",
+        "score": 0.746276,
+        "rerank_score": 0.6414546370506287
+      },
+      {
+        "rank": 4,
+        "doc_id": "D03",
+        "score": 0.703447,
+        "rerank_score": 0.6294788122177124
+      },
+      {
+        "rank": 5,
+        "doc_id": "YQ-PROD-008",
+        "score": 0.664505,
+        "rerank_score": 0.6264582872390747
+      },
+      {
+        "rank": 6,
+        "doc_id": "YQ-INST-022",
+        "score": 0.58414,
+        "rerank_score": 0.6188532710075378
+      },
+      {
+        "rank": 7,
+        "doc_id": "YQ-INST-003",
+        "score": 0.55813,
+        "rerank_score": 0.6187717914581299
+      },
+      {
+        "rank": 8,
+        "doc_id": "D03",
+        "score": 0.418372,
+        "rerank_score": 0.6670920848846436
+      },
+      {
+        "rank": 9,
+        "doc_id": "YQ-INST-013",
+        "score": 0.310234,
+        "rerank_score": 0.6350646615028381
+      },
+      {
+        "rank": 10,
+        "doc_id": "YQ-TECH-DOCKER-022",
+        "score": 0.288741,
+        "rerank_score": 0.6300069093704224
+      }
+    ],
+    "both_conflicting_documents_retrieved": true
+  },
+  "result": {
+    "answer": "模型调用失败：Connection error.",
+    "citations": [],
+    "gaps": [],
+    "status": "tool_error",
+    "trace": [
+      {
+        "action": "model_error",
+        "error": "Connection error."
+      }
+    ],
+    "tools_used": [],
+    "rounds": 1
+  },
+  "assertions": {
+    "live_embedding_retrieval_ran": true,
+    "both_conflicting_documents_retrieved": true,
+    "status_needs_clarification": false,
+    "both_conflicting_documents_cited": false,
+    "search_and_read_tools_used": false
+  }
+}

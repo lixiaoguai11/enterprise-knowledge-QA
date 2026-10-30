@@ -1,6 +1,6 @@
 {
   "run_mode": "脚本化模型和知识工具响应；真实 QA Agent 编排代码；不代表 DeepSeek 实际推理或检索质量",
-  "generated_at": "2026-10-28",
+  "generated_at": "2026-10-30",
   "scenarios": [
     {
       "input": "报销期限多久？",
@@ -27,18 +27,67 @@
         "status": "needs_clarification",
         "trace": [
           {
+            "action": "model_tool_choice",
+            "tool": "search_documents",
+            "arguments": {
+              "query": "报销期限"
+            },
+            "decision_basis": "根据当前问题，模型选择先从知识库获取证据。",
+            "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。"
+          },
+          {
             "action": "search_documents",
             "arguments": {
               "query": "报销期限"
             },
-            "result_count": 2
+            "result_count": 2,
+            "result_summary": {
+              "count": 2,
+              "documents": [
+                {
+                  "doc_id": "D01",
+                  "title": "报销制度 D01",
+                  "version_date": "2026-01-10",
+                  "quote_preview": "员工应在费用发生后 30 天内提交报销申请。"
+                },
+                {
+                  "doc_id": "D02",
+                  "title": "报销规则 D02",
+                  "version_date": "2026-02-01",
+                  "quote_preview": "员工应在费用发生后 15 天内提交报销申请。"
+                }
+              ]
+            }
+          },
+          {
+            "action": "model_tool_choice",
+            "tool": "read_document",
+            "arguments": {
+              "doc_id": "D01"
+            },
+            "decision_basis": "上次检索返回 2 条候选片段，模型选择读取 D01 原文核对上下文。",
+            "note": "基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。"
           },
           {
             "action": "read_document",
             "arguments": {
               "doc_id": "D01"
             },
-            "result_count": 1
+            "result_count": 1,
+            "result_summary": {
+              "doc_id": "D01",
+              "section_count": 1,
+              "sections": [
+                {
+                  "heading": "报销期限",
+                  "quote_preview": "员工应在费用发生后 30 天内提交报销申请。"
+                }
+              ]
+            }
+          },
+          {
+            "action": "model_final",
+            "decision_basis": "模型本轮未请求更多工具，返回最终结构化结果。"
           },
           {
             "action": "conflict_guard",
@@ -51,7 +100,7 @@
         ],
         "rounds": 3
       },
-      "cli_output": "\n答案：检索到互相矛盾的资料：D01（版本 2026-01-10）：‘员工应在费用发生后 30 天内提交报销申请。’；D02（版本 2026-02-01）：‘员工应在费用发生后 15 天内提交报销申请。’。现有资料未能确定适用范围或优先级，请确认应按哪项制度处理。\n状态：needs_clarification\n引用：\n  - D01 | 报销制度 D01 | 版本 2026-01-10\n    原文：员工应在费用发生后 30 天内提交报销申请。\n  - D02 | 报销规则 D02 | 版本 2026-02-01\n    原文：员工应在费用发生后 15 天内提交报销申请。\n资料缺口：\n  - 缺少能够判定冲突资料适用范围或优先级的信息\n工具 Trace：\n  - {\"action\": \"search_documents\", \"arguments\": {\"query\": \"报销期限\"}, \"result_count\": 2}\n  - {\"action\": \"read_document\", \"arguments\": {\"doc_id\": \"D01\"}, \"result_count\": 1}\n  - {\"action\": \"conflict_guard\", \"conflicts_found\": 1}\n"
+      "cli_output": "\n答案：检索到互相矛盾的资料：D01（版本 2026-01-10）：‘员工应在费用发生后 30 天内提交报销申请。’；D02（版本 2026-02-01）：‘员工应在费用发生后 15 天内提交报销申请。’。现有资料未能确定适用范围或优先级，请确认应按哪项制度处理。\n状态：needs_clarification\n引用：\n  - D01 | 报销制度 D01 | 版本 2026-01-10\n    原文：员工应在费用发生后 30 天内提交报销申请。\n  - D02 | 报销规则 D02 | 版本 2026-02-01\n    原文：员工应在费用发生后 15 天内提交报销申请。\n资料缺口：\n  - 缺少能够判定冲突资料适用范围或优先级的信息\n工具 Trace：\n  - {\"action\": \"model_tool_choice\", \"tool\": \"search_documents\", \"arguments\": {\"query\": \"报销期限\"}, \"decision_basis\": \"根据当前问题，模型选择先从知识库获取证据。\", \"note\": \"基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。\"}\n  - {\"action\": \"search_documents\", \"arguments\": {\"query\": \"报销期限\"}, \"result_count\": 2, \"result_summary\": {\"count\": 2, \"documents\": [{\"doc_id\": \"D01\", \"title\": \"报销制度 D01\", \"version_date\": \"2026-01-10\", \"quote_preview\": \"员工应在费用发生后 30 天内提交报销申请。\"}, {\"doc_id\": \"D02\", \"title\": \"报销规则 D02\", \"version_date\": \"2026-02-01\", \"quote_preview\": \"员工应在费用发生后 15 天内提交报销申请。\"}]}}\n  - {\"action\": \"model_tool_choice\", \"tool\": \"read_document\", \"arguments\": {\"doc_id\": \"D01\"}, \"decision_basis\": \"上次检索返回 2 条候选片段，模型选择读取 D01 原文核对上下文。\", \"note\": \"基于可观察到的工具结果与实际工具调用生成的摘要，不包含模型内部思维过程。\"}\n  - {\"action\": \"read_document\", \"arguments\": {\"doc_id\": \"D01\"}, \"result_count\": 1, \"result_summary\": {\"doc_id\": \"D01\", \"section_count\": 1, \"sections\": [{\"heading\": \"报销期限\", \"quote_preview\": \"员工应在费用发生后 30 天内提交报销申请。\"}]}}\n  - {\"action\": \"model_final\", \"decision_basis\": \"模型本轮未请求更多工具，返回最终结构化结果。\"}\n  - {\"action\": \"conflict_guard\", \"conflicts_found\": 1}\n"
     }
   ]
 }
