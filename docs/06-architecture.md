@@ -156,7 +156,7 @@ flowchart LR
     SAME --> LIGHT[LightRAG]
     SAME --> LINEAR[LinearRAG]
 
-    BM25 --> SCORE[相同 Reader 与评审<br/>official combined score]
+    BM25 --> SCORE[已完成层级：相同 Reader 与评审<br/>official combined score]
     DENSE --> SCORE
     FS --> SCORE
     HIPPO --> SCORE
@@ -164,17 +164,24 @@ flowchart LR
     LIGHT --> SCORE
     LINEAR --> SCORE
 
+    HIPPO -. 131,876 份文档之后未完成 .-> MISSING[后续层级无实测值]
+    MS -. 8,750 份文档之后未完成 .-> MISSING
+    LIGHT -. 2,254 份文档之后未完成 .-> MISSING
+    LINEAR -. 131,876 份文档之后未完成 .-> MISSING
+
     BM25 -. 候选检索工具 .-> AB[Agent + BM25<br/>仅两层规模的机制对照]
 
     classDef implemented fill:#d7f2de,stroke:#247a3e,color:#143c22;
     classDef research fill:#eef1ff,stroke:#5964a6,color:#252f66;
+    classDef unavailable fill:#fff5e6,stroke:#ab6b16,stroke-dasharray:5 4,color:#73430b;
     class BM25,DENSE implemented;
     class FS,HIPPO,MS,LIGHT,LINEAR,AB research;
+    class MISSING unavailable;
 ```
 
 绿色表示本项目具备对应的检索基础能力：BM25，以及启用向量后端时的向量召回。本项目实际运行的是 BM25、可选向量召回与 RRF 融合，再由 Agent 调用检索和原文读取工具；它没有复现论文的独立 DenseRAG、文件系统 Agent 或 GraphRAG 实验。论文中的文件系统 Agent 只暴露 `list_dir`、`grep`、`read_doc` 三种只读工具，并非任意 Bash 命令执行。`Agent + BM25` 是论文在最小层与全量层做的检索机制对照，不是 28 层主曲线中的第八种方法。
 
-论文[图 3 与表 1](https://arxiv.org/html/2607.26497v3)显示的规模下降趋势，纵轴是 **official combined score**，即答案正确性约束下的完整度；它不是 Recall@5 曲线。论文为适用的方法统一使用 top-5 文本片段作为检索深度，并另报文档召回率。文中还给出最小层 BM25 的 gold-chunk recall at five 为 75.1%，但没有把它作为图 3 的纵轴。以下是表 1 中选取的实测层级，单位为百分比；空项表示该方法未完成或未评估该层，不是得分为零。
+论文[图 3 与表 1](https://arxiv.org/html/2607.26497v3)显示的规模下降趋势，纵轴是 **official combined score**，即答案正确性约束下的完整度；它不是 Recall@5 曲线。论文为适用的方法统一使用 top-5 文本片段作为检索深度，并另报文档召回率。文中还给出最小层 BM25 的 gold-chunk recall at five 为 75.1%，但没有把它作为图 3 的纵轴。以下是表 1 中选取的实测层级，单位为百分比；空项表示该方法未完成或未评估该层，不是得分为零。图中的虚线仅表示这些层级没有完成索引或评估，不连接到任何纵轴得分。
 
 | 方法 | 1,144 文档 | 42,587 文档 | 511,959 文档 |
 |---|---:|---:|---:|
@@ -186,7 +193,7 @@ flowchart LR
 | LightRAG | 48.0 | — | — |
 | LinearRAG | 46.2 | 31.3 | — |
 
-若在本项目验证“语料变大时是否下降”，应固定问题、金标准文档、冲突和误导性资料，再逐层加入背景文档；每层分别记录 **Recall@5、答案正确率或完整度、索引成本、查询耗时与工具调用量**。当前仓库没有这组分层实验数据，上表仅引用论文结果，不能作为本项目的效果证明。
+本项目后续的规模实验以 **文档级 Recall@5** 为主检索指标：对每个有答案的问题，取检索返回的前 5 个片段，将其文档 ID 去重，再计算命中的金标准文档数除以该问题的金标准文档总数，最后对有答案的问题取平均。冲突问题的金标准应同时包含互相矛盾的资料，例如 D01 与 D02；资料外问题另计正确拒答率，不混入 Recall@5。固定问题、金标准文档、冲突和误导性资料后，逐层加入背景文档，并同步记录答案正确率、索引成本、查询耗时与工具调用量。任何方法只画到最后一个**实测**层级；未完成的后续层级用虚线标记覆盖缺口，不沿用末次 Recall@5 或外推新值。当前仓库没有这组分层实验数据，上表仅引用论文结果，不能作为本项目的效果证明。
 
 ## 运行边界
 
