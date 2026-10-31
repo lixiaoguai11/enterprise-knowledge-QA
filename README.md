@@ -2,18 +2,18 @@
 
 员工可在终端查询制度和产品资料。Agent 根据检索结果决定继续搜索、读取原文、请求澄清或结束，并在回答中列出文档 ID、版本日期和原文引用。资料相互冲突时，系统展示各方依据及待确认的适用规则。
 
-## 提交信息
+## 功能
 
-- 题目：企业知识增强 Agent
-- 题号：当前提供的考核材料未包含编号，提交考核平台时需补填
-- GitHub：[lixiaoguai11/enterprise-knowledge-QA](https://github.com/lixiaoguai11/enterprise-knowledge-QA)
-- 最终 commit SHA：以本次交付提交后的 `main` 最新提交为准（交付说明中附上）
+- 交互式 CLI 问答，支持本进程内的上下文追问。
+- BM25 与可选向量检索、RRF 融合及候选重排。
+- 模型根据工具结果选择继续搜索、读取原文或结束；回答附带可核对的引用和任务状态。
+- 支持 OpenAI 兼容 Chat Completions 与 Anthropic Messages API。
 
 ## 环境
 
 - Python 3.12+ 和 uv
 - 所选模型服务的 API Key（真实模型问答需要）
-- 可用的 Embedding 服务，或首次运行时可下载本地 FastEmbed 模型的网络环境；向量初始化失败时检索回退至 BM25
+- Embedding 服务或本地 FastEmbed 模型可选；向量初始化失败时检索回退至 BM25
 - 无需 Node.js、Docker、GPU 或 Web 服务
 
 ## 快速使用（Windows PowerShell）
@@ -26,6 +26,17 @@ uv pip install --python .venv\Scripts\python.exe -r backend\requirements.txt
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 notepad .env
 ```
+
+在 `.env` 填入所选模型服务的 API Key 后，启动交互式 CLI：
+
+```powershell
+cd backend
+..\.venv\Scripts\python.exe -m app.cli
+```
+
+输入问题即可问答；`/help` 查看命令，`/new` 清空当前会话，`/exit` 退出。每轮展示答案、引用原文、资料缺口、状态和工具 Trace。首次接手项目可先读[开发者导览](docs/00-start-here.md)。
+
+## 配置
 
 `.env` 位于仓库根目录。通过 `LLM_PROVIDER` 选择模型接口：`deepseek` 使用 OpenAI 兼容 Chat Completions，`anthropic` 使用 Anthropic Messages API。DeepSeek 配置 `DEEPSEEK_API_KEY`，可选 `DEEPSEEK_BASE_URL` 与 `MODEL_NAME`；Anthropic 配置 `ANTHROPIC_API_KEY`、`ANTHROPIC_BASE_URL` 和 `ANTHROPIC_MODEL`。使用 Anthropic 协议兼容网关时，把服务商提供的 URL 填入 `ANTHROPIC_BASE_URL`，并选 `LLM_PROVIDER=anthropic`。
 
@@ -42,26 +53,15 @@ ANTHROPIC_MODEL=claude-sonnet-4-5
 
 修改 `.env` 后重启 CLI。Anthropic 专用变量优先；未填写时使用对应的 DeepSeek 变量，便于同一网关切换协议。`ANTHROPIC_BASE_URL` 可填写服务根地址或以 `/v1` 结尾的地址；适配器会规范化地址，由 SDK 请求 `/v1/messages`。
 
-启动交互式 CLI：
-
-```powershell
-cd backend
-..\.venv\Scripts\python.exe -m app.cli
-```
-
 数据库为空时，启动会导入 `data/clean` 中的 Markdown 文档，建立 BM25 索引，并在向量后端可用时启用向量检索和 BGE embedding 相似度重排。已有数据库不会自动重新导入资料。当前进程保留对话上下文，可直接追问。
 
 `RERANKER_PROVIDER=bge_similarity` 会复用 BGE embedding 给候选片段打余弦相似度分；`RERANKER_PROVIDER=qwen_api` 会调用 `RERANK_BASE_URL`，并使用 `RERANK_API_KEY`、`RERANK_MODEL_NAME`；`none` 可关闭第二阶段重排。`.env.example` 默认使用无需额外 API 的 BGE 相似度模式。远端 API adapter 实现了 `backend/app/reranker.py` 的统一接口，API 失败会作为检索工具失败返回，不会静默假装重排成功。
 
 启用 Qwen rerank 服务时，在本机 `.env` 中设置 `RERANKER_PROVIDER=qwen_api`、`RERANK_API_KEY`、`RERANK_MODEL_NAME` 和 `RERANK_BASE_URL`。程序向完整 URL 发送包含 `model`、`query`、`documents`、`top_n` 的 JSON，并按返回的 `index` 与 `relevance_score` 排序。接入新网关后，用在线 smoke 检查其请求和响应结构。
 
-- `/help`：查看可用命令
-- `/new`：清空当前对话上下文
-- `/exit`：退出
+状态包括 `answered`、`needs_clarification`、`insufficient_evidence`、`tool_error` 和达到调用上限时的 `incomplete`。
 
-输入问题后，每轮会显示答案、状态、引用（文档 ID、版本日期和原句）、资料缺口及工具 Trace。状态包括 `answered`、`needs_clarification`、`insufficient_evidence`、`tool_error` 和达到调用上限时的 `incomplete`。首次接手项目可先读[开发者导览](docs/00-start-here.md)。
-
-## 评审入口
+## 文档
 
 - 需求与成功标准：[docs/01-requirements.md](docs/01-requirements.md)
 - 新手导览与排查：[docs/00-start-here.md](docs/00-start-here.md)
@@ -72,10 +72,11 @@ cd backend
 - AI 使用范围与作者贡献：[docs/04-ai-usage.md](docs/04-ai-usage.md)
 - 复盘与后续工作：[docs/05-retrospective.md](docs/05-retrospective.md)
 - 脚本化与真实模型的输入、输出和 Trace：[examples/](examples/)
-- 真实模型请求超时记录：[examples/04-live-deepseek-timeout.json](examples/04-live-deepseek-timeout.json)
 - 合成冲突资料：[data/clean/synthetic/](data/clean/synthetic/)
 
-运行测试：
+## 测试与验证
+
+以下命令在仓库根目录执行；若仍位于 `backend/`，先运行 `cd ..`。运行自动化测试：
 
 ```powershell
 .venv\Scripts\python.exe -m pytest -q
