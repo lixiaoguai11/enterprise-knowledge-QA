@@ -135,6 +135,59 @@ sequenceDiagram
 | 数据库连接和表模型 | [`backend/app/database.py`](../backend/app/database.py)、[`backend/app/models.py`](../backend/app/models.py) | SQLite/SQLAlchemy 中的 Document 与 Chunk |
 | 用户可替换知识资料 | [`data/clean/`](../data/clean/)、[`data/meta/manifest.csv`](../data/meta/manifest.csv) | 源 Markdown、文档 ID 和版本元数据 |
 
+## 企业语料规模与检索路径：论文对照
+
+[《BM25 Wins at Scale》](https://arxiv.org/html/2607.26497v3)在同一组问题、相关文档和干扰文档保持不变的条件下，将企业语料扩展为 28 个严格嵌套的层级，从 1,144 份文档增至 511,959 份。下图按该论文的方法组织检索路径，供本项目后续设计规模实验时参考；图中的方法名称不表示本仓库均已实现。
+
+```mermaid
+flowchart LR
+    BED[固定问题、正确证据与误导性资料] --> T0[T0<br/>1,144 份文档]
+    T0 --> T1[中间层级<br/>逐级加入背景资料]
+    T1 --> T27[T27<br/>511,959 份文档]
+    T0 --> SAME[每层使用相同问题与评估协议]
+    T1 --> SAME
+    T27 --> SAME
+
+    SAME --> BM25[BM25<br/>倒排索引]
+    SAME --> DENSE[DenseRAG<br/>向量检索]
+    SAME --> FS[File-System Agent<br/>类 BashAgent 的只读文件搜索]
+    SAME --> HIPPO[HippoRAG 2]
+    SAME --> MS[MS-GraphRAG]
+    SAME --> LIGHT[LightRAG]
+    SAME --> LINEAR[LinearRAG]
+
+    BM25 --> SCORE[相同 Reader 与评审<br/>official combined score]
+    DENSE --> SCORE
+    FS --> SCORE
+    HIPPO --> SCORE
+    MS --> SCORE
+    LIGHT --> SCORE
+    LINEAR --> SCORE
+
+    BM25 -. 候选检索工具 .-> AB[Agent + BM25<br/>仅两层规模的机制对照]
+
+    classDef implemented fill:#d7f2de,stroke:#247a3e,color:#143c22;
+    classDef research fill:#eef1ff,stroke:#5964a6,color:#252f66;
+    class BM25,DENSE implemented;
+    class FS,HIPPO,MS,LIGHT,LINEAR,AB research;
+```
+
+绿色表示本项目具备对应的检索基础能力：BM25，以及启用向量后端时的向量召回。本项目实际运行的是 BM25、可选向量召回与 RRF 融合，再由 Agent 调用检索和原文读取工具；它没有复现论文的独立 DenseRAG、文件系统 Agent 或 GraphRAG 实验。论文中的文件系统 Agent 只暴露 `list_dir`、`grep`、`read_doc` 三种只读工具，并非任意 Bash 命令执行。`Agent + BM25` 是论文在最小层与全量层做的检索机制对照，不是 28 层主曲线中的第八种方法。
+
+论文[图 3 与表 1](https://arxiv.org/html/2607.26497v3)显示的规模下降趋势，纵轴是 **official combined score**，即答案正确性约束下的完整度；它不是 Recall@5 曲线。论文为适用的方法统一使用 top-5 文本片段作为检索深度，并另报文档召回率。文中还给出最小层 BM25 的 gold-chunk recall at five 为 75.1%，但没有把它作为图 3 的纵轴。以下是表 1 中选取的实测层级，单位为百分比；空项表示该方法未完成或未评估该层，不是得分为零。
+
+| 方法 | 1,144 文档 | 42,587 文档 | 511,959 文档 |
+|---|---:|---:|---:|
+| BM25 | 74.7 | 61.2 | 50.5 |
+| File-System Agent | 77.4 | 58.9 | 30.7 |
+| DenseRAG | 58.1 | 40.7 | 29.9 |
+| HippoRAG 2 | 66.2 | 50.5 | — |
+| MS-GraphRAG | 45.9 | — | — |
+| LightRAG | 48.0 | — | — |
+| LinearRAG | 46.2 | 31.3 | — |
+
+若在本项目验证“语料变大时是否下降”，应固定问题、金标准文档、冲突和误导性资料，再逐层加入背景文档；每层分别记录 **Recall@5、答案正确率或完整度、索引成本、查询耗时与工具调用量**。当前仓库没有这组分层实验数据，上表仅引用论文结果，不能作为本项目的效果证明。
+
 ## 运行边界
 
 - 产品入口为交互式 CLI。
